@@ -1,0 +1,27 @@
+// SUMMARY
+//
+// Determines the probability of a truc's engine failure
+
+city ~ discrete_qualitative("City1"=6, "City2"=4, "City3"=5);
+fuel ~ beta(α=5, β=1, 0.4, 0.7);
+
+if (city == "City1") {
+    inspection_quality ~ discrete_numeric(0=30, 1=50, 2=20);
+} else if (city == "City2") {
+    inspection_quality ~ discrete_numeric(0=20, 1=40, 2=40);
+} else {
+    inspection_quality ~ discrete_numeric(0=40, 1=10, 2=50);
+};
+
+
+if ((fuel <= 0.2) && (inspection_quality == 0)) {
+    engine_failure ~ bernoulli(0.95);
+} else {
+    engine_failure ~ bernoulli(0.01);
+}
+
+
+
+observe (city == "City3");
+
+return engine_failure
