@@ -1,7 +1,7 @@
 """
 SUMMARY
 
-Discrete variable, designed to be used as the result of an operation.
+Discrete variables.
 """
 
 
