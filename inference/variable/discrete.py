@@ -10,35 +10,30 @@ from .common import Common
 
 
 # Generates an array of discrete variables (qualitative or numeric)
-# Not a variable itself
-class Discrete_Creator(object):
+# "requested_discrete_type": must be "qualitative" or "numeric"
+# "given_variable_name"
+# given_expectations = [...] assigned values to the variables (5, "cat")
+# given_odds = [(float), ...], may be probabilities but not necessarily (no requirement to add up to one, enforced for the total after normalization)
+def discrete_creator(requested_discrete_type, given_variable_name, given_expectations, given_odds):
 
-    # "requested_discrete_type": must be "qualitative" or "numeric"
-    # "given_variable_name"
-    # given_expectations = [...]
-    # given_odds = [(float), ...], may be probabilities but not necessarily (no requirement to add up to one, enforced for the total after normalization)
-    def __init__(self, requested_discrete_type, given_variable_name, given_expectations, given_odds):
+    assert requested_discrete_type in ["qualitative",
+                                        "numeric"], "discrete type must be 'qualitative' or 'numeric', it cannot be '%s'" % (requested_discrete_type, )
 
-        assert requested_discrete_type in ["qualitative",
-                                            "numeric"], "discrete type must be 'qualitative' or 'numeric', it cannot be '%s'" % (requested_discrete_type, )
+    combined_odds = sum(given_odds)
 
-        combined_odds = sum(given_odds)
+    # Creates a set of variables
+    created_variables = []
 
-        # Creates a set of variables
-        self.created_variables = []
+    for nv in range(0, len(given_expectations)):
+        assigned_probability = given_odds[nv]/combined_odds
 
-        for nv in range(0, len(given_expectations)):
-            assigned_probability = given_odds[nv]/combined_odds
-
-            if requested_discrete_type == "qualitative":
-                self.created_variables.append(Discrete_Qualitative(given_variable_name, given_expectations[nv], assigned_probability))
-            elif requested_discrete_type == "numeric":
-                self.created_variables.append(Discrete_Numeric(given_variable_name, given_expectations[nv], assigned_probability))
+        if requested_discrete_type == "qualitative":
+            self.created_variables.append(Discrete_Qualitative(given_variable_name, given_expectations[nv], assigned_probability))
+        elif requested_discrete_type == "numeric":
+            self.created_variables.append(Discrete_Numeric(given_variable_name, given_expectations[nv], assigned_probability))
 
 
-    # Obtains the created variables
-    def get_created_variables(self):
-        return self.created_variables
+    return self.created_variables
 
 
 
