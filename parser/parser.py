@@ -55,7 +55,7 @@ SimPPL_parser = Lark(r"""
     | seq
     | ite_elseif
     | ite_complete
-    | block
+    | reject
     | marg
     | margvar
     | elim
@@ -73,13 +73,12 @@ SimPPL_parser = Lark(r"""
     flip: NAME ("∼"|"~") "flip" (SIGNED_NUMBER | "(" SIGNED_NUMBER ")")
     observe: "observe" e
     seq: s ";" s
+
     ite: "if" e "{" s ";"* "}" "else" "{" s ";"* "}"
-
-
     ite_elseif: "if" e "{" s ";"* "}" ["else" "if" e "{" s ";"* "}"]*
     ite_complete: "if" e "{" s ";"* "}" ["else" "if" e "{" s ";"* "}"]* "else" "{" s ";"* "}"
 
-    block: "block" e
+    reject: "reject" e
     marg: "marginalize" "(" e ")"
     margvar: "marginalize_variable" "(" NAME ["," NAME ]*  ")"
     elim: "eliminate" "(" e ")"

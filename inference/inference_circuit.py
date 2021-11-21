@@ -90,6 +90,35 @@ class Circuit(object):
                 available_parent_nodes = future_parent_nodes
 
 
+            # Reject statement
+            # Opposite of observe, ignore nodes that meet the statement
+            elif data_from_tree == "reject":
+                # Gets the observe statement
+                observe_statement_tree = present_tree.children[0]
+
+                # Adds the observe statement as a future node
+                for a_parent_node in available_parent_nodes:
+
+                    # Only add node if the observation is met
+
+                    # Obtains the environment, tokens and variable values only
+                    environment_parent = a_parent_node.obtain_chain_environment()
+
+                    # {"variable token":variable_value, ...}
+                    environment_token_parent = {a_token:environment_parent[a_token][0] for a_token in environment_parent}
+
+                    if logical_value.FALSE == logical_evaluator(observe_statement_tree, environment_token_parent, True):
+                        future_parent_nodes.append(Circuit_node_rejection(a_parent_node, observe_statement_tree))
+                    else:
+                        # Add deadend nodes to places where the observation is not met
+                        # These nodes are not parent nodes
+                        Circuit_node_deadend(a_parent_node)
+
+
+                # Mark the parent nodes as the current observation nodes
+                available_parent_nodes = future_parent_nodes
+
+
             # Handling if statements, single if statements only
             elif data_from_tree == "ite":
 
@@ -341,7 +370,8 @@ class Circuit_node(object):
 
         self.current_probability = current_probability
 
-        # Stores the observation tree
+        # Stores the observation or rejection tree
+        # Rejection trees act the same as a negated obseervation
         self.observation_tree = observation_tree
 
         # Stores the compressed information
@@ -482,7 +512,7 @@ class Circuit_node(object):
 
 
 # Creates a circuit node for a variable.
-# Each node has 1 token, 1 parent (None if it is the circuit head), a value (true or false), and probailities of it being true
+# Each node has 1 token, 1 parent (None if it is the circuit head), a variable, and a probability of being true
 class Circuit_node_variable(Circuit_node):
 
     # Inheritance information obtained from https://www.programiz.com/python-programming/inheritance
@@ -498,13 +528,24 @@ class Circuit_node_variable(Circuit_node):
 
 
 # Creates a circuit node for an observation.
-# Each node has 1 token, 1 parent (None if it is the circuit head), a value (true or false), and probailities of it being true
 class Circuit_node_observation(Circuit_node):
 
     # Inheritance information obtained from https://www.programiz.com/python-programming/inheritance
     def __init__(self, parent, given_observation_tree):
 
         Circuit_node.__init__(self, "OBSERVATION", observation_node=True, parents=[parent], variable_value=generate_true_fixed_var(),
+            current_probability=1, observation_tree=given_observation_tree, compressed_node=False,  compressed_environment=None,
+            deadend=False)
+
+
+
+# Creates a circuit node for an rejection.
+class Circuit_node_rejection(Circuit_node):
+
+    # Inheritance information obtained from https://www.programiz.com/python-programming/inheritance
+    def __init__(self, parent, given_observation_tree):
+
+        Circuit_node.__init__(self, "REJECTION", observation_node=True, parents=[parent], variable_value=generate_true_fixed_var(),
             current_probability=1, observation_tree=given_observation_tree, compressed_node=False,  compressed_environment=None,
             deadend=False)
 
@@ -517,8 +558,8 @@ class Circuit_node_compressed(Circuit_node):
     # Inheritance information obtained from https://www.programiz.com/python-programming/inheritance
     # pre_compression_nodes (arr) (Circuit_node): Refers to the nodes before compression
     def __init__(self, requested_operation, pre_compression_nodes):
-        valid_operations = ["OBSERVATION", "MARG", "MARGVAR", "ELIM", "ELIMVAR", "DEADEND"]
-        assert requested_operation in  ["OBSERVATION", "MARG", "MARGVAR", "ELIM", "ELIMVAR"],...
+        valid_operations = ["OBSERVATION", "REJECTION", "MARG", "MARGVAR", "ELIM", "ELIMVAR", "DEADEND"]
+        assert requested_operation in  ["OBSERVATION", "REJECTION", "MARG", "MARGVAR", "ELIM", "ELIMVAR"],...
         "Operation must be in '%s', currrently is '%s'" % (str(valid_operations), requested_operation)
 
         # Obtains all the probabilities
