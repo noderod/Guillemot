@@ -18,6 +18,109 @@ integral_points = 1 + integral_resolution
 
 
 
+# Creates a number of continuous distributions ranges
+def generate_discretized_continuous_distribution(given_variable_name, distribution_name, separating_points, distribution_parameter_values):
+
+    # Sorts the separating points so that these can be processed in order
+    ordered_separating_points = sorted(separating_points)
+
+    # enforces known distribution
+    assert distribution_name in ["uniform", "normal", "beta", "pareto"], "'%s' distribution is not accepted" % (distribution_name, )
+
+
+    # Generates the different distributions
+    if distribution_name == "uniform":
+
+        a, b = distribution_parameter_values
+        enforce_array_within_lu(ordered_separating_points, a, b)
+
+        # Adds the points to the range as the start and end
+        ordered_separating_points = [a] + ordered_separating_points + [b]
+
+        created_distributions = []
+
+        for wa in range(0, (len(ordered_separating_points) - 1)):
+            l = ordered_separating_points[wa]
+            u = ordered_separating_points[wa + 1]
+
+            created_distributions.append(uniform_distribution(given_variable_name, l, u, a, b))
+
+    elif distribution_name == "normal":
+        μ, σ = distribution_parameter_values
+
+        five_sigma = 5*σ
+
+        # If no interval ranges, utilize 5σ (> 99.9999 of the distribution)
+        if ordered_separating_points == []:
+            ordered_separating_points = [μ - five_sigma, μ + five_sigma]
+        # If there is one or more values, get the ends at 5σ in one distance and 5σ from the peak in the other distance if peak not within values
+        else:
+            furthest_left  = ordered_separating_points[0]
+            furthest_right = ordered_separating_points[-1]
+
+            # Do 5σ in both distances if the peak (μ) is contained within the interval
+            if check_within_interval(μ, furthest_left, furthest_right, contains=False):
+                ordered_separating_points = [furthest_left - five_sigma] + ordered_separating_points + [furthest_right + five_sigma]
+
+            # Not contained
+            # If left of the furthest left, go 5σ left of the peak
+            elif μ < (furthest_left - five_sigma):
+                ordered_separating_points = [μ - five_sigma] + ordered_separating_points + [furthest_right + five_sigma]
+            # if right of the furthest right, go 5σ right of the peak
+            else:
+                ordered_separating_points = [furthest_left - five_sigma] + ordered_separating_points + [μ + five_sigma]
+
+        for wa in range(0, (len(ordered_separating_points) - 1)):
+            l = ordered_separating_points[wa]
+            u = ordered_separating_points[wa + 1]
+
+            created_distributions.append(normal_distribution(given_variable_name, l, u, μ, σ))
+
+
+    # Generates the different distributions
+    elif distribution_name == "beta":
+
+        α, β = distribution_parameter_values
+        enforce_array_within_lu(ordered_separating_points, 0, 1)
+
+        # Adds the points to the range as the start and end
+        ordered_separating_points = [a] + ordered_separating_points + [b]
+
+        created_distributions = []
+
+        for wa in range(0, (len(ordered_separating_points) - 1)):
+            l = ordered_separating_points[wa]
+            u = ordered_separating_points[wa + 1]
+
+            created_distributions.append(uniform_distribution(given_variable_name, l, u, α, β))
+
+
+    # Generates the different distributions
+    elif distribution_name == "pareto":
+
+        x_m. α = distribution_parameter_values
+        enforce_array_within_lu(ordered_separating_points, x_m, np.inf)
+
+        # End point asssigned as the place where CDF >= 0.999999 (close to the 5*σ for the normal distribution)
+        if ordered_separating_points == []:
+            end_point = x_m/(0.000001**(1/α))
+        else:
+            end_point = ordered_separating_points[-1] + x_m/(0.000001**(1/α))
+
+        ordered_separating_points = [x_m] + ordered_separating_points + [end_point]
+
+        created_distributions = []
+
+        for wa in range(0, (len(ordered_separating_points) - 1)):
+            l = ordered_separating_points[wa]
+            u = ordered_separating_points[wa + 1]
+
+            created_distributions.append(uniform_distribution(given_variable_name, l, u, x_m. α))
+
+    return created_distributions
+
+
+
 # Common continuous function
 # Designed as an abstract class to automatically describe the variable in an unified format
 def common_continuous(Common):
@@ -49,6 +152,9 @@ def uniform_distribution(common_continuous):
     # a (int/float): Start of range
     # b (int/float): End of range
     def __init__(self, given_variable_name, lower_bound, upper_bound, a, b):
+
+        # Enforces a <= b
+        assert a <= b, "a=%.3f > b=%.3f" % (a, b)
 
         # Distribution calculations completed using
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
@@ -102,6 +208,11 @@ def pareto_distribution(common_continuous):
     # β (int/float)
     def __init__(self, given_variable_name, lower_bound, upper_bound, x_m. α):
 
+        # Enforces real values
+        # Based on https://en.wikipedia.org/wiki/Pareto_distribution
+        assert x_m > 0, "x_m cannot be zero or below"
+        assert α > 0, "α cannot be zero or below"
+
         # Distribution calculations completed using
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html
         # https://en.wikipedia.org/wiki/Pareto_distribution
@@ -112,8 +223,6 @@ def pareto_distribution(common_continuous):
             E, Var, lower_bound, upper_bound, probability)
 
 
-
-pareto(alpha, scale=x_m)
 
 # calculates the z standardization
 # z = (x - μ)/σ
@@ -178,3 +287,33 @@ def get_PR_E_Var(ab, cdist):
     Var /= probability
 
     return [probability, E, Var]
+
+
+
+# Checks (but not enforces) if a variable is contained within an interval
+def check_within_interval(x, l, u, contains):
+    if contains:
+        return (l <= x) and (x <= u)
+    else:
+        return (l < x) and (x < u)
+
+
+
+# Enforces that a value is within a lower and upper bound
+# l <= u, not checked
+def enforce_x_within_lu(x, l, u):
+
+    assert(l <= x), "%.3f < %.3f" % (x, l)
+    assert(x <= u), "%.3f > %.3f" % (x, u)
+
+
+
+# Enforces that all the values in an array are within lower and upper bounds
+# l <= u, checked
+def enforce_array_within_lu(given_array, l, u):
+
+    # Enforces that lower bound is below upper bound
+    assert l <= u, "%.3f > %.3f" % (l, u)
+
+    for x in given_array:
+        enforce_x_within_lu(x, l, u)
