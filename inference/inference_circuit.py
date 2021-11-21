@@ -6,10 +6,11 @@ Implements an inference circuit and associated elements.
 
 
 from copy import deepcopy
-import random
 
-from .aux_inference import add_to_stack, Simple_Stack
+from .aux_inference import add_to_stack, Simple_Stack, select_random_by_weight
 from .sentence_evaluation import logical_evaluator
+from .variable.common import generate_true_fixed_var
+from .variable.discrete import discrete_creator, generate_bernoulli
 from .variable.logical_variables import logical_value
 
 
@@ -22,7 +23,7 @@ class Circuit(object):
 
         # Creates a ground node at the top
         # Always true
-        self.ground_node = Circuit_node_variable(token="GROUND_TOKEN", parent=None, binary_value=logical_value.TRUE, probability_true=1)
+        self.ground_node = Circuit_node_variable(token="GROUND_TOKEN", parent=None, variable_value=generate_true_fixed_var())
 
         # Keeps track of the final output requirements
         self.output_tree = given_output_tree
@@ -64,8 +65,6 @@ class Circuit(object):
                 # Gets the observe statement
                 observe_statement_tree = present_tree.children[0]
 
-                #future_parent_nodes = []
-
                 # Adds the observe statement as a future node
                 for a_parent_node in available_parent_nodes:
 
@@ -77,8 +76,13 @@ class Circuit(object):
                     # {"variable token":variable_value, ...}
                     environment_token_parent = {a_token:environment_parent[a_token][0] for a_token in environment_parent}
 
-                    if logical_value.TRUE == logical_evaluator(observe_statement_tree, environment_token_parent):
+                    if logical_value.TRUE == logical_evaluator(observe_statement_tree, environment_token_parent, True):
                         future_parent_nodes.append(Circuit_node_observation(a_parent_node, observe_statement_tree))
+                    else:
+                        # Add deadend nodes to places where the observation is not met
+                        # These nodes are not parent nodes
+                        Circuit_node_deadend(a_parent_node)
+
 
                 # Mark the parent nodes as the current observation nodes
                 available_parent_nodes = future_parent_nodes
@@ -91,8 +95,6 @@ class Circuit(object):
                 contents_if   = present_tree.children[1]
                 # There is always an else with statements within
                 contents_else = present_tree.children[2]
-
-                #future_parent_nodes = []
 
                 # Adds the subcircuits to the if conditions
                 for a_parent_node in available_parent_nodes:
@@ -114,14 +116,37 @@ class Circuit(object):
                 # Values are string, must be transformed back into numbers
                 variable_flip_value = float(present_tree.children[1].value)
 
-                #future_parent_nodes = []
+                # Creates a pair of Bernoulli variables
+                b1, b2 = generate_bernoulli(token_name, variable_flip_value)
 
                 # Adds two variable nodes, one for each binary value
                 for a_parent_node in available_parent_nodes:
 
-                    future_parent_nodes += [Circuit_node_variable(token_name, a_parent_node, logical_value.TRUE,  variable_flip_value),
-                                            Circuit_node_variable(token_name, a_parent_node, logical_value.FALSE, variable_flip_value)
-                                            ]
+                    future_parent_nodes += [Circuit_node_variable(token_name, a_parent_node, b1),
+                                            Circuit_node_variable(token_name, a_parent_node, b2)]
+
+                # Mark the parent nodes as the current observation nodes
+                available_parent_nodes = future_parent_nodes
+
+
+            # If a node is a bernoulli variable, add the variable (does the same as fip)
+            elif present_tree.data == "bern":
+
+                # Obtains the token
+                token_name = present_tree.children[0].value
+
+                operation_to_be_executed = present_tree.children[1]
+
+                # Adds two variable nodes, one for each binary value
+                for a_parent_node in available_parent_nodes:
+
+                    environment_parent = a_parent_node.obtain_chain_environment_vars_only()
+                    assigned_variable_value = logical_evaluator(operation_to_be_executed, environment_parent, final_result=False, numeric_final_result=True)
+
+                    b1, b2 = generate_bernoulli(token_name, assigned_variable_value)
+
+                    future_parent_nodes += [Circuit_node_variable(token_name, a_parent_node, b1),
+                                            Circuit_node_variable(token_name, a_parent_node, b2)]
 
                 # Mark the parent nodes as the current observation nodes
                 available_parent_nodes = future_parent_nodes
@@ -130,22 +155,17 @@ class Circuit(object):
             # If a node is an assignment, add this variable
             elif present_tree.data == "assgn":
 
-                # Obtains the token
                 token_name = present_tree.children[0].value
+                operation_to_be_executed = present_tree.children[1]
 
                 for a_parent_node in available_parent_nodes:
 
                     # Obtains the environment, tokens and variable values only
-                    environment_parent = a_parent_node.obtain_chain_environment()
-
-                    # {"variable token":variable_value, ...}
-                    environment_token_parent = {a_token:environment_parent[a_token][0] for a_token in environment_parent}
-
-                    # Calculates the assignment value
-                    assigned_value = logical_evaluator(present_tree.children[1], environment_token_parent, False)
+                    environment_parent = a_parent_node.obtain_chain_environment_vars_only()
+                    assigned_variable = logical_evaluator(operation_to_be_executed, environment_parent, final_result=False, numeric_final_result=False)
 
                     # Adds node
-                    future_parent_nodes += [Circuit_node_assigned_variable(token_name, a_parent_node, assigned_value)]
+                    future_parent_nodes += [Circuit_node_variable(token_name, a_parent_node, generate_true_fixed_var())]
 
                 available_parent_nodes = future_parent_nodes
 
@@ -171,39 +191,25 @@ class Circuit(object):
             available_children = current_node_location.children
             num_children = len(available_children)
 
-            # If there is a single child node, just go there (indicates an if or an observation)
+            # If there is a single child node, just go there (indicates an observation or a compression node)
             if num_children == 1:
                 current_node_location = available_children[0]
-            elif num_children == 2:
 
-                uniform_location = random.random()
-
-                # Finds the true and false children nodes
-                cn_1 = current_node_location.children[0]
-                cn_2 = current_node_location.children[1]
-
-                if cn_1.binary_value == logical_value.TRUE:
-                    t_node = cn_1
-                    f_node = cn_2
-                else:
-                    t_node = cn_2
-                    f_node = cn_1
-
-                p_choosing_true_node = t_node.probability_true
-
-                if uniform_location <= p_choosing_true_node:
-                    current_node_location = t_node
-                else:
-                    current_node_location = f_node
-
+            # When there are multiple children, it selects one at random (uniformly)
             else:
-                # There cannot be more than 2 children in a node
-                # Note that the zero children case is enforced by the while loop invariable condition
-                raise ValueError("Assumption does not hold, more than 2 children in node, num children = %d" % num_children)
 
-        [_Pr_chain, meets_output, meets_observes] = current_node_location.evaluate_chain(self.output_tree)
+                # Selects a child node weighted by its probability
+                child_nodes_weighted_by_Pr = [[a_child_node, a_child_node.current_probability] for a_child_node in available_children]
+                current_node_location = select_random_by_weight(child_nodes_weighted_by_Pr)
 
-        return [meets_output, meets_observes]
+
+        # In case of deadend, 0 for all
+        # Items which do not meet observations cannot meet output requirements
+        if current_node_location.deadend:
+            return [0, 0]
+        else:
+            [_Pr_chain, meets_output] = current_node_location.evaluate_chain(self.output_tree)
+            return [meets_output, 1]
 
 
 
@@ -245,13 +251,14 @@ class Circuit(object):
 
         for a_bottom_node in self.bottom_nodes:
 
-            [Pr_chain, meets_output, meets_observes] = a_bottom_node.evaluate_chain(self.output_tree)
+            [Pr_chain, meets_output] = a_bottom_node.evaluate_chain(self.output_tree)
 
-            if meets_observes:
-                Pr_meets_observes += Pr_chain
+            # All the elements at the bottom of the tree meet the observes, otherwise they would not have reached it
+            Pr_meets_observes += Pr_chain
 
-                if meets_output:
-                    Pr_meets_output_and_observes += Pr_chain
+            # Not all final tree elements may meet the output requirements
+            if meets_output:
+                Pr_meets_output_and_observes += Pr_chain
 
         if (Pr_meets_output_and_observes == 0) and (Pr_meets_observes == 0):
             print(0)
@@ -271,55 +278,58 @@ class Circuit(object):
 
 
 # Creates a circuit node.
-# Each node has 1 token, 1 parent (None if it is the circuit head), a value (true or false), and probailities of it being true
+# Each node has 1 token, 1 or more parents (None if it is the circuit head), a value (variable object), and probailities of it being true
+# probability_true (float): Refers to the probability of the node itself, this is useful for variable marginalization or elimination
+# compressed_node (bool): Refers to nodes after marginalization or elimination (where the probabilities and environments are stored directly)
+# compressed_environment {"variable token":variable value}: Environment present in compressed nodes
+# deadend (bool): Creates a dead-end node, designed to mark nodes which do not meet observations
 class Circuit_node(object):
 
-    def __init__(self, token, observation_node, parent, binary_value, probability_true, observation_tree):
+    def __init__(self, token, observation_node, parents, variable_value, current_probability, observation_tree, compressed_node = False,
+        compressed_environment = None, deadend = False):
 
         self.token = token
-        self.parent = parent
+
+        # Requires parents to be a list
+        assert type(parents) == list, "Provided parents must be a list"
+
+        self.parents = parents
 
         self.observation_node = observation_node
 
         # No children nodes as of now
         self.children = []
 
-        # Enforces the variable to be either true or false, no indeterminate
-        assert (binary_value == logical_value.TRUE) or (binary_value == logical_value.FALSE), ...
-        "Binary value must be 'logical_value.TRUE' or 'logical_value.FALSE'"
-
-        self.binary_value = binary_value
+        self.variable_value = variable_value
 
 
         # Enforces probabality is between 0 and 1
         # ∈ obtained from https://en.wikipedia.org/wiki/Glossary_of_mathematical_symbols
-        assert (0 <= probability_true) and (probability_true <= 1), "Pr(True) ∈ [0, 1], assigned Pr(True) = %f" % (probability_true, )
+        assert (0 <= current_probability) and (current_probability <= 1), "Pr ∈ [0, 1], assigned Pr = %.4f" % (current_probability, )
 
-        self.probability_true = probability_true
-
-        # Stores the current probability, depends on whether it is true or false
-        if self.binary_value == logical_value.TRUE:
-            self.current_probability = self.probability_true
-        else:
-            self.current_probability = 1 - self.probability_true
+        self.current_probability = current_probability
 
         # Stores the observation tree
         self.observation_tree = observation_tree
 
+        # Stores the compressed information
+        self.compressed_node = compressed_node
+        self.compressed_environment = compressed_environment
+
+        self.deadend = deadend
+
         # Updates the parent node, adding the current node as a child, unless the parent is None (ground node)
-        if parent != None:
-            self.parent.children.append(self)
+        if parents != [None]:
+
+            for ma in range(0, len(parents)):
+                self.parents[ma].children.append(self)
 
 
     # Custom node representation in string form
     # Obtained using "OneCricketeer" and "Ignacio Vazquez-Abrams"'s answer from
     # https://stackoverflow.com/questions/4932438/how-to-create-a-custom-string-representation-for-a-class-object
     def __str__(self):
-        return "CIRCUIT NODE(token=\"%s\", binary value=\"%s\", Pr = %.4f, Pr(T)=%.4f)" % (self.token,
-                                                                                            self.binary_value,
-                                                                                            self.current_probability,
-                                                                                            self.probability_true)
-
+        return "CIRCUIT NODE(token=\"%s\", variable value=(%s), Pr = %.4f)" % (self.token, self.variable_value, self.current_probability)
 
 
     # Shows a node and the ones below in a recursive manner with 2-indent per level
@@ -343,15 +353,19 @@ class Circuit_node(object):
     # Implemented in a tail-recursive way for efficiency
     def obtain_chain_probability(self, probability_so_far=1):
 
-        if self.parent == None:
+        if self.parents == [None]:
+            return probability_so_far*self.current_probability
+
+        # For compressed nodes (corresponding to variable elimination or marginalization), get their probability as well
+        elif self.compressed_node:
             return probability_so_far*self.current_probability
         else:
-            return self.parent.obtain_chain_probability(probability_so_far*self.current_probability)
+            return self.parents[0].obtain_chain_probability(probability_so_far*self.current_probability)
 
 
     # Obtains the environment dictionary of the current upwards chain of events
     # Implemented in a tail-recursive way for efficiency
-    # environment dictionary = {"token":[variable_value, current_probability (float)]}
+    # return environment dictionary = {"token":[variable, current_probability (float)]}
     def obtain_chain_environment(self, environment_so_far = {}):
 
         # EXPERIMENTAL
@@ -361,46 +375,42 @@ class Circuit_node(object):
         # Updates the environment with the current variable
         # If the variable is already in the environment, do not update
         # This corresponds to leaving the last updated variable value
-        if (self.token not in environment_so_far) and (self.token != "OBSERVATION"):
-            recursive_environment[self.token] = [self.binary_value, self.current_probability]
+        if (self.token not in environment_so_far) and (self.token != "OBSERVATION") and (not self.compressed_node):
+            recursive_environment[self.token] = [self.variable_value, self.current_probability]
+
+        # Compressed nodes, retrieve all values from their environment
+        elif self.compressed_node:
+            for a_var_token in self.compressed_environment:
+                recursive_environment[self.a_var_token] = [self.compressed_environment[a_var_token], self.probability]
+
 
         # ---------------------------------------
 
         # OLD VERSION
         #environment_so_far[self.token] = [self.binary_value, self.current_probability]
 
-        if self.parent == None:
+        if self.parents == [None]:
             #print(environment_so_far)
             return environment_so_far
         else:
-            return self.parent.obtain_chain_environment(recursive_environment)
+            return self.parents[0].obtain_chain_environment(recursive_environment)
             # OLD
             #return self.parent.obtain_chain_environment(environment_so_far)
 
 
+    # Obtains the variables alone from a chain/trace
+    # return # {"variable token":variable_value, ...}
+    def obtain_chain_environment_vars_only(self):
+        # Obtains the environment, tokens and variable values only
+        complete_environment = self.obtain_chain_environment()
 
-    # Obtains a list of observation trees up the chain
-    # Return [observation tree, ...]
-    def obtain_chain_observation_tree(self, observation_list_so_far = []):
-
-        # Add observation tree only if the current node is an observation
-        if self.observation_node:
-            observation_list_so_far.append(self.observation_tree)
-
-        if self.parent == None:
-
-            # End of the list, there must be at least one observation, so add a None (always evaluated to True as in sentence_evaluator.py) if empty list
-            if observation_list_so_far == []:
-                return [None]
-
-            return observation_list_so_far
-        else:
-            return self.parent.obtain_chain_observation_tree(observation_list_so_far)
+        # {"variable token":variable_value, ...}
+        return{a_token:complete_environment[a_token][0] for a_token in complete_environment}
 
 
 
     # Evaluates the upward chain probability and whether or not the upward chain meets the return statement tree as well as the observation lists within
-    # Return [Pr(chain) (float), True/False meets output (return) statement tree, True/False meets observation list trees within]
+    # Return [Pr(chain) (float), True/False meets output (return) statement tree]
     def evaluate_chain(self, given_output_tree):
 
         # Obtains the chain probability
@@ -412,23 +422,14 @@ class Circuit_node(object):
         # {"variable token":variable_value, ...}
         environment_token_vv = {a_token:environment_2[a_token][0] for a_token in environment_2}
 
-        # Obtains the observations in the chain
-        necessary_chain_observations = self.obtain_chain_observation_tree()
-
         # Verifies if the output (return) statement is met
-        meets_output = logical_value.TRUE == logical_evaluator(given_output_tree, environment_token_vv)
+        meets_output = logical_value.TRUE == logical_evaluator(given_output_tree, environment_token_vv, True, False)
 
-        # Verifies that all observations in the chain are met
-        meets_observes = all([logical_value.TRUE == logical_evaluator(a_given_observation_tree, environment_token_vv)
-                                for a_given_observation_tree in necessary_chain_observations
-                            ])
-
-        return [chain_Pr, meets_output, meets_observes]
+        return [chain_Pr, meets_output]
 
 
 
-    # Evaluates the upward chain probability and whether or not the upward chain meets an if condition
-    # Return [Pr(chain) (float), True/False meets output (return) statement tree, True/False meets observation list trees within]
+    # Evaluates whether or not the upward chain meets an if condition
     def evaluate_if_condition(self, given_condition):
 
         # Obtains the chain probability
@@ -440,10 +441,7 @@ class Circuit_node(object):
         # {"variable token":variable_value, ...}
         environment_token_vv = {a_token:environment_2[a_token][0] for a_token in environment_2}
 
-        # Obtains the observations in the chain
-        necessary_chain_observations = self.obtain_chain_observation_tree()
-
-        logical_evaluation_result = logical_evaluator(given_condition, environment_token_vv)
+        logical_evaluation_result = logical_evaluator(given_condition, environment_token_vv, True, False)
 
         # Verifies if the output (return) statement is met
         # Not strict due to lazy evaluation
@@ -456,12 +454,14 @@ class Circuit_node(object):
 class Circuit_node_variable(Circuit_node):
 
     # Inheritance information obtained from https://www.programiz.com/python-programming/inheritance
-    def __init__(self, token, parent, binary_value, probability_true):
+    def __init__(self, token, parent, variable_value):
 
         # Enforces the token being different from "OBSERVATION"
-        assert token != "OBSERVATION", "Token cannot be 'OBSERVATION', reserved name"
+        assert token not in  ["OBSERVATION", "MARG", "MARGVAR", "ELIM", "ELIMVAR", "DEADEND"], "Token cannot be '%s', reserved name" % (token, )
 
-        Circuit_node.__init__(self, token, False, parent, binary_value, probability_true, None)
+        Circuit_node.__init__(self, token, observation_node=False, parents=[parent], variable_value=variable_value,
+            current_probability=variable_value.probability, observation_tree=None, compressed_node=False,  compressed_environment=None,
+            deadend=False)
 
 
 
@@ -472,29 +472,44 @@ class Circuit_node_observation(Circuit_node):
     # Inheritance information obtained from https://www.programiz.com/python-programming/inheritance
     def __init__(self, parent, given_observation_tree):
 
-        Circuit_node.__init__(self, "OBSERVATION", True, parent, logical_value.TRUE, 1, given_observation_tree)
+        Circuit_node.__init__(self, "OBSERVATION", observation_node=True, parents=[parent], variable_value=generate_true_fixed_var(),
+            current_probability=1, observation_tree=given_observation_tree, compressed_node=False,  compressed_environment=None,
+            deadend=False)
 
 
 
-# Creates a circuit node for a variable assignment, this variable always has a probability of 1 or 0
-# Each node has 1 token, 1 parent (None if it is the circuit head), a value (true or false), and probailities of it being true
-class Circuit_node_assigned_variable(Circuit_node):
+# Relevant for variable marginalization and elimination nodes
+# This node is used for for storage, it gets the probabilities of the nodes above, but it does not select them itself
+class Circuit_node_compressed(Circuit_node):
 
     # Inheritance information obtained from https://www.programiz.com/python-programming/inheritance
-    def __init__(self, token, parent, assigned_value):
+    # pre_compression_nodes (arr) (Circuit_node): Refers to the nodes before compression
+    def __init__(self, requested_operation, pre_compression_nodes):
+        valid_operations = ["OBSERVATION", "MARG", "MARGVAR", "ELIM", "ELIMVAR", "DEADEND"]
+        assert requested_operation in  ["OBSERVATION", "MARG", "MARGVAR", "ELIM", "ELIMVAR"],...
+        "Operation must be in '%s', currrently is '%s'" % (str(valid_operations), requested_operation)
 
-        # Requires the assigned value to be either true or false
-        # Assignments cannot be indeterminate, this would not make sense
-        assert (assigned_value == logical_value.TRUE) or (assigned_value == logical_value.FALSE), ...
-        "Assigned value must be 'logical_value.TRUE' or 'logical_value.FALSE', it cannot be %s" % (str(assigned_value), )
-        # Enforces the token being different from "OBSERVATION"
-        assert token != "OBSERVATION", "Token cannot be 'OBSERVATION', reserved name"
+        # Obtains all the probabilities
+        combined_Pr = 0
 
-        if assigned_value == logical_value.TRUE:
-            binary_value = logical_value.TRUE
-            probability_true = 1
-        elif assigned_value == logical_value.FALSE:
-            binary_value = logical_value.FALSE
-            probability_true = 0
+        for a_parent_node in pre_compression_nodes:
+            combined_Pr += a_parent_node.obtain_chain_probability()
 
-        Circuit_node.__init__(self, token, False, parent, binary_value, probability_true, None)
+        # Assumed that the variables after compression which have been compressed will not be used
+        # and that different compressed nodes will have separate variables of interest
+        post_compression_env = pre_compression_nodes[0].obtain_chain_environment()
+
+        Circuit_node.__init__(self, requested_operation, observation_node=False, parents=pre_compression_nodes, variable_value=generate_true_fixed_var(),
+            current_probability=combined_Pr, observation_tree=None, compressed_node=True,  compressed_environment=post_compression_env,
+            deadend=False)
+
+
+
+# Creates a deadend node
+# Designed for traces where observations are not met
+class Circuit_node_deadend(Circuit_node):
+    # Inheritance information obtained from https://www.programiz.com/python-programming/inheritance
+    # pre_compression_nodes (arr) (Circuit_node): Refers to the nodes before compression
+    def __init__(self, parent):
+        Circuit_node.__init__(self, "DEADEND", observation_node=False, parents=[parent], variable_value=generate_true_fixed_var(),
+            current_probability=1, observation_tree=None, compressed_node=False,  compressed_environment=None, deadend=True)

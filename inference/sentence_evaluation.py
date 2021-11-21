@@ -8,16 +8,18 @@ Evaluates a sentence, logical only, provided the meaning of the tokens.
 import re
 
 from .variable.common import Fixed, generate_true_fixed_var, generate_false_fixed_var
-from .variable.logical_variables import logical_value, opposite_values
+from .variable.logical_variables import logical_value
 
 
 
-# Evaluates a sentence logicaLly provided token meanings in a recursive way
+# Evaluates a sentence logicaLly in a recursive way given the variable environment
 # tree_to_be_considered (Parse Tree): Parsed tree corresponding to the expression, or None if no observation (assumed true)
 # environment_dict ({"token":variable (Common), ....}): Values (objects) corresponding to each token, environment of the variables,
 #  not of the Operating System
-# final_result (bool): Whether or not this is the final or a recursion result
-def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True):
+# final_result (bool): Whether or not this is the final or a recursion result (if yes, return logical_value object)
+# numeric_final_result (bool): Returns the expectation (actual value, not a variable object) in the end
+#  useful when utilizing a logical expression as input
+def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True, numeric_final_result=False):
 
     if tree_to_be_considered == None:
         return logical_value.TRUE
@@ -30,7 +32,7 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
 
         variable_name = tree_to_be_considered.children[0].value
 
-        # Obtains the variable value, indeterminate if not within the environment
+        # Obtains the variable value
         if variable_name in environment_dict:
             operation_logical_value = environment_dict[variable_name]
 
@@ -40,15 +42,20 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
         elif variable_name == "false":
             operation_logical_value = generate_false_fixed_var()
 
+
         # Assigns strings as fixed variables
         elif re.match("\".*\"", variable_name):
             contents_str = variable_name.replace("\"", "")
             operation_logical_value = Fixed("PLACEHOLDER", contents_str)
 
+        # Assigns numbers (ints or floats)
+        elif numeric_string(variable_name):
+            operation_logical_value = Fixed("PLACEHOLDER", float(variable_name))
 
         else:
             # All variables must be assigned, False if one is not available
             operation_logical_value = generate_false_fixed_var()
+
 
 
     # If it is an "and_operation", follow the tree and return the result recursively
@@ -100,8 +107,6 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
             operation_logical_value = generate_false_fixed_var()
         else:
             operation_logical_value = generate_true_fixed_var()
-
-        operation_logical_value = opposite_values[sole_evaluated]
 
 
     elif operation_name == "expectation_operation":
@@ -182,6 +187,10 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
 
 
 
+    # If requesting a value, return the expectation (value, not a variable object)
+    if numeric_final_result:
+        return operation_logical_value.expectation
+
 
     # Returns the result, checking if indeterminate if needed
     if final_result:
@@ -191,11 +200,11 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
 
 
 
-# Evaluates avariable or sentence result as false if indeterminate and strict_evaluation=True, returns its original value if not
-def evaluate_content_indeterminate_as_false(given_result, strict_evaluation=False):
 
-    if (given_result == variable_value.INDETERMINATE) and strict_evaluation:
-        return variable_value.FALSE
-
-    return given_result
-
+# Checks if a certain object can be numeric (float), includes integers
+def numeric_string(something):
+    try:
+        float(something)
+        return True
+    except:
+        return False

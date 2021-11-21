@@ -28,12 +28,20 @@ def discrete_creator(requested_discrete_type, given_variable_name, given_expecta
         assigned_probability = given_odds[nv]/combined_odds
 
         if requested_discrete_type == "qualitative":
-            self.created_variables.append(Discrete_Qualitative(given_variable_name, given_expectations[nv], assigned_probability))
+            created_variables.append(Discrete_Qualitative(given_variable_name, given_expectations[nv], assigned_probability))
         elif requested_discrete_type == "numeric":
-            self.created_variables.append(Discrete_Numeric(given_variable_name, given_expectations[nv], assigned_probability))
+            created_variables.append(Discrete_Numeric(given_variable_name, given_expectations[nv], assigned_probability))
 
 
-    return self.created_variables
+    return created_variables
+
+
+
+# Creates a Bernoulli (flip) variable
+# 0 <= (p =given_Pr) <= 1
+def generate_bernoulli(given_variable_name, given_Pr):
+    assert (0 <= given_Pr) and (given_Pr <= 1), "Required 0 <= p <= 1, p =%.4f" % (given_Pr, )
+    return discrete_creator("numeric", given_variable_name, [0, 1], [1 - given_Pr, given_Pr])
 
 
 
@@ -59,6 +67,6 @@ class Discrete_Numeric(Common):
         given_expectation_type = type(given_expectation).__name__
 
         # Enforces the expectaton to not be a string
-        assert given_expectation_type != "str", "Discrete qualitative variables must not be of type 'str'"
+        assert given_expectation_type != "str", "Discrete numeric variables must not be of type 'str'"
 
         Common.__init__(self, given_variable_name, "numeric qualitative", given_expectation, 0, given_expectation, given_expectation, given_probability)

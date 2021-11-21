@@ -27,6 +27,11 @@ def generate_discretized_continuous_distribution(given_variable_name, distributi
     # enforces known distribution
     assert distribution_name in ["uniform", "normal", "beta", "pareto"], "'%s' distribution is not accepted" % (distribution_name, )
 
+    # Enforces all parameters to be numeric
+    for a_param in distribution_parameter_values:
+        param_type = type(a_param).__name__
+        assert (param_type == "int") or (param_type == float), "All parameters, must be int or float type, not '%s'" % (param_type, )
+
 
     # Generates the different distributions
     if distribution_name == "uniform":
@@ -137,7 +142,7 @@ def common_continuous(Common):
         parameters_together = []
 
         for a_pn, a_pv in zip(distribution_parameter_names, distribution_parameter_values):
-            parameters_together.append("%s=%.3f" % (a_pn, a_pv))
+            parameters_together.append("%s=%.4f" % (a_pn, a_pv))
 
 
         formatted_variable_class = distribution_name + "(" + ", ".join(parameters_together) + ")"
@@ -154,7 +159,7 @@ def uniform_distribution(common_continuous):
     def __init__(self, given_variable_name, lower_bound, upper_bound, a, b):
 
         # Enforces a <= b
-        assert a <= b, "a=%.3f > b=%.3f" % (a, b)
+        assert a <= b, "a=%.4f > b=%.4f" % (a, b)
 
         # Distribution calculations completed using
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
@@ -303,8 +308,8 @@ def check_within_interval(x, l, u, contains):
 # l <= u, not checked
 def enforce_x_within_lu(x, l, u):
 
-    assert(l <= x), "%.3f < %.3f" % (x, l)
-    assert(x <= u), "%.3f > %.3f" % (x, u)
+    assert(l <= x), "%.4f < %.4f" % (x, l)
+    assert(x <= u), "%.4f > %.4f" % (x, u)
 
 
 
@@ -313,7 +318,7 @@ def enforce_x_within_lu(x, l, u):
 def enforce_array_within_lu(given_array, l, u):
 
     # Enforces that lower bound is below upper bound
-    assert l <= u, "%.3f > %.3f" % (l, u)
+    assert l <= u, "%.4f > %.4f" % (l, u)
 
     for x in given_array:
         enforce_x_within_lu(x, l, u)
