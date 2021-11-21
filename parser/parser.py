@@ -37,8 +37,8 @@ SimPPL_parser = Lark(r"""
     or: ("(" "||" e e ")"|"(" e "||" e ")")
     not: "(" "!" e ")"
 
-    expect: "E" ("[" e "]"| "(" e ")" )
-    var : "Var" ("[" e "]"| "(" e ")" )
+    expect: "E" "(" e ")"
+    var : "Var" "(" e ")"
 
     equal_check:   ("(" "==" e e ")"|"(" e "==" e ")")
     less_check:    ("(" "<" e e ")"|"(" e "<" e ")")
@@ -69,8 +69,8 @@ SimPPL_parser = Lark(r"""
     | d_beta
 
 
-    assgn: NAME "=" (e|SIGNED_NUMBER|ESCAPED_STRING)
-    flip: NAME ("∼"|"~") "flip" (NAME|SIGNED_NUMBER)
+    assgn: NAME "=" e
+    flip: NAME ("∼"|"~") "flip" (SIGNED_NUMBER | "(" SIGNED_NUMBER ")")
     observe: "observe" e
     seq: s ";" s
     ite: "if" e "{" s ";"* "}" "else" "{" s ";"* "}"
@@ -86,15 +86,15 @@ SimPPL_parser = Lark(r"""
     elimvar: "eliminate_variable" "(" NAME ["," NAME ]*  ")"
 
 
-    bern: NAME ("∼"|"~") "bernoulli" "(" (NAME|SIGNED_NUMBER) ")"
-    disc_num: NAME ("∼"|"~") "discrete_numeric" "(" SIGNED_NUMBER "=" (NAME|SIGNED_NUMBER) ["," SIGNED_NUMBER "=" (NAME|SIGNED_NUMBER) ]* ")"
-    disc_qual: NAME ("∼"|"~") "discrete_qualitative" "(" ESCAPED_STRING "=" (NAME|SIGNED_NUMBER) ["," ESCAPED_STRING "=" (NAME|SIGNED_NUMBER) ]* ")"
+    bern: NAME ("∼"|"~") "bernoulli" "(" e ")"
+    disc_num: NAME ("∼"|"~") "discrete_numeric" "(" e "=" e ["," e "=" e ]* ")"
+    disc_qual: NAME ("∼"|"~") "discrete_qualitative" "(" ESCAPED_STRING "=" e ["," ESCAPED_STRING "=" e ]* ")"
 
-    d_uni: NAME ("∼"|"~") "uniform" "(" "a" "=" (NAME|SIGNED_NUMBER) "," "b" "=" (NAME|SIGNED_NUMBER) ["," (NAME|SIGNED_NUMBER) ]* ")"
-    d_gau: NAME ("∼"|"~") ("gaussian"|"normal") "(" ("μ"|"mu") "=" (NAME|SIGNED_NUMBER) "," ("σ"|"sigma") "=" (NAME|SIGNED_NUMBER) ["," (NAME|SIGNED_NUMBER) ]* ")"
+    d_uni: NAME ("∼"|"~") "uniform" "(" "a" "=" e "," "b" "=" e ["," e ]* ")"
+    d_gau: NAME ("∼"|"~") ("gaussian"|"normal") "(" ("μ"|"mu") "=" e "," ("σ"|"sigma") "=" e ["," e ]* ")"
 
-    d_pareto: NAME ("∼"|"~") "pareto" "(" "x_m" "=" (NAME|SIGNED_NUMBER) "," ("α"|"alpha") "=" (NAME|SIGNED_NUMBER) "," ["," (NAME|SIGNED_NUMBER) ]* ")"
-    d_beta: NAME ("∼"|"~") "beta" "(" ("α"|"alpha") "=" (NAME|SIGNED_NUMBER) "," ("β"|"beta") "=" (NAME|SIGNED_NUMBER) ["," (NAME|SIGNED_NUMBER) ]* ")"
+    d_pareto: NAME ("∼"|"~") "pareto" "(" "x_m" "=" e "," ("α"|"alpha") "=" e "," ["," e ]* ")"
+    d_beta: NAME ("∼"|"~") "beta" "(" ("α"|"alpha") "=" e "," ("β"|"beta") "=" e ["," e ]* ")"
 
 
 

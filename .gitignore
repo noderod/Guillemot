@@ -1,3 +1,4 @@
 benchmarks/SimPPL
 presentation_graphics
-*/__pycache__/*
+*/__pycache__/
+*/tmp*

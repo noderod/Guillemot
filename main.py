@@ -24,7 +24,3 @@ with open(program_filepath, "r") as ff:
 
 # Runs a given inference method
 inference.infer(parsed_program, inference_method, calculate_time)
-
-
-
-
