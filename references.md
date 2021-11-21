@@ -31,4 +31,12 @@
 28. Using *Herman Schaaf* and *craymichael*'s answer from [https://stackoverflow.com/questions/3899980/how-to-change-the-font-size-on-a-matplotlib-plot](https://stackoverflow.com/questions/3899980/how-to-change-the-font-size-on-a-matplotlib-plot).
 29. [https://www.programiz.com/python-programming/operator-overloading](https://www.programiz.com/python-programming/operator-overloading)
 30. [https://en.wikipedia.org/wiki/Greek_alphabet](https://en.wikipedia.org/wiki/Greek_alphabet)
+31. [https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.norm.html](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.norm.html)
+32. [https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html)
+33. [https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.beta.html](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.beta.html)
+34. [https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pareto.html)
+35. [https://en.wikipedia.org/wiki/Pareto_distribution](https://en.wikipedia.org/wiki/Pareto_distribution)
+36. [https://towardsdatascience.com/generating-pareto-distribution-in-python-2c2f77f70dbf](https://towardsdatascience.com/generating-pareto-distribution-in-python-2c2f77f70dbf)
+
+
 

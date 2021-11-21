@@ -71,7 +71,7 @@ SimPPL_parser = Lark(r"""
     d_uni: NAME ("∼"|"~") "uniform" "(" "a" "=" (NAME|SIGNED_NUMBER) "," "b" "=" (NAME|SIGNED_NUMBER) ["," (NAME|SIGNED_NUMBER) ]* ")"
     d_gau: NAME ("∼"|"~") ("gaussian"|"normal") "(" ("μ"|"mu") "=" (NAME|SIGNED_NUMBER) "," ("σ"|"sigma") "=" (NAME|SIGNED_NUMBER) ["," (NAME|SIGNED_NUMBER) ]* ")"
 
-    d_pareto: NAME ("∼"|"~") "pareto" "(" ("α"|"alpha") "=" (NAME|SIGNED_NUMBER) "," "x_m" "=" SIGNED_NUMBER "," ["," (NAME|SIGNED_NUMBER) ]* ")"
+    d_pareto: NAME ("∼"|"~") "pareto" "(" "x_m" "=" (NAME|SIGNED_NUMBER) "," ("α"|"alpha") "=" (NAME|SIGNED_NUMBER) "," ["," (NAME|SIGNED_NUMBER) ]* ")"
     d_beta: NAME ("∼"|"~") "beta" "(" ("α"|"alpha") "=" (NAME|SIGNED_NUMBER) "," ("β"|"beta") "=" (NAME|SIGNED_NUMBER) ["," (NAME|SIGNED_NUMBER) ]* ")"
 
 
