@@ -141,20 +141,17 @@ class Circuit(object):
 
             # Handles if statements with optional "else if", but no "else"
             # Only one condition is implemented, if there is a conflict between them, the first one met is implemented
-            elif present_tree.data == "ite_elseif":
+            elif data_from_tree == "ite_elseif":
 
                 num_branches = len(present_tree.children)//2
                 available_branches = [a_branch_number for a_branch_number in range(0, num_branches)]
-
-                # Keeps track of nodes never accounted for
-                never_considered_nodes = []
 
                 for a_parent_node in available_parent_nodes:
 
                     # Goes condition by condition
                     for a_branch in available_branches:
                         condition = present_tree.children[2*a_branch]
-                        contents   = present_tree.children[2*a_branch + 1]
+                        contents  = present_tree.children[2*a_branch + 1]
 
                         if a_parent_node.evaluate_if_condition(condition):
                             future_parent_nodes += self.build_subcircuit(a_parent_node, contents)
@@ -167,6 +164,36 @@ class Circuit(object):
 
                 # Update the available to future parent nodes
                 available_parent_nodes = future_parent_nodes
+
+
+            # Handles if statements with optional "else if" and required "else"
+            # Only one condition is implemented, if a conflict occurs, the first one is implemented
+            elif data_from_tree == "ite_complete":
+
+                # Disregard the last branch (else statement)
+                num_branches = (len(present_tree.children) -1)//2
+                available_branches = [a_branch_number for a_branch_number in range(0, num_branches)]
+
+                for a_parent_node in available_parent_nodes:
+
+                    # Goes condition by condition
+                    for a_branch in available_branches:
+                        condition = present_tree.children[2*a_branch]
+                        contents  = present_tree.children[2*a_branch + 1]
+
+                        if a_parent_node.evaluate_if_condition(condition):
+                            future_parent_nodes += self.build_subcircuit(a_parent_node, contents)
+                            break
+
+                    else:
+                        # No condition has ever been met
+                        # Add ihe node as is
+                        future_parent_nodes.append(a_parent_node)
+
+                # Update the available to future parent nodes
+                available_parent_nodes = future_parent_nodes
+
+
 
 
             # If a node is a flip, add the variable
