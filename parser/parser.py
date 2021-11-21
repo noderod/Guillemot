@@ -17,18 +17,35 @@ from lark import Lark
 
 SimPPL_parser = Lark(r"""
     e: NAME
+    | ESCAPED_STRING
+    | SIGNED_NUMBER
     | and -> and_operation
     | or  -> or_operation
     | not -> not_operation
     | "true" -> true
     | "false" -> false
     | expect -> expectation_operation
+    | var -> variance_operation
+    | equal_check -> equal_operation
+    | less_check -> less_operation
+    | lt_check -> lt_operation
+    | greater_check -> greater_operation
+    | gt_check -> gt_operation
+
 
     and: ("(" "&&" e e ")"|"(" e "&&" e ")")
     or: ("(" "||" e e ")"|"(" e "||" e ")")
     not: "(" "!" e ")"
 
-    expect: "E" "\[" NAME "\]"
+    expect: "E" ("[" e "]"| "(" e ")" )
+    var : "Var" ("[" e "]"| "(" e ")" )
+
+    equal_check:   ("(" "==" e e ")"|"(" e "==" e ")")
+    less_check:    ("(" "<" e e ")"|"(" e "<" e ")")
+    lt_check:      ("(" "<=" e e ")"|"(" e "<=" e ")")
+    greater_check: ("(" ">" e e ")"|"(" e ">" e ")")
+    gt_check:      ("("" >=" e e ")"|"(" e ">=" e ")")
+
 
 
     s: assgn
@@ -40,7 +57,9 @@ SimPPL_parser = Lark(r"""
     | ite_complete
     | block
     | marg
+    | margvar
     | elim
+    | elimvar
     | bern
     | disc_num
     | disc_qual
@@ -57,11 +76,14 @@ SimPPL_parser = Lark(r"""
     ite: "if" e "{" s ";"* "}" "else" "{" s ";"* "}"
 
 
-    ite_elseif: "if" e "{" s ";"* "}" ["elseif" e "{" s ";"* "}"]*
-    ite_complete: "if" e "{" s ";"* "}" ["elseif" e "{" s ";"* "}"]* "else" "{" s ";"* "}"
+    ite_elseif: "if" e "{" s ";"* "}" ["else" "if" e "{" s ";"* "}"]*
+    ite_complete: "if" e "{" s ";"* "}" ["else" "if" e "{" s ";"* "}"]* "else" "{" s ";"* "}"
 
     block: "block" e
-    marg: "marginalize" e
+    marg: "marginalize" "(" e ")"
+    margvar: "marginalize_variable" "(" NAME ["," NAME ]*  ")"
+    elim: "eliminate" "(" e ")"
+    elimvar: "eliminate_variable" "(" NAME ["," NAME ]*  ")"
 
 
     bern: NAME ("∼"|"~") "bernoulli" "(" (NAME|SIGNED_NUMBER) ")"

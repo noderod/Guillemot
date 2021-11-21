@@ -10,7 +10,7 @@ import random
 
 from .aux_inference import add_to_stack, Simple_Stack
 from .sentence_evaluation import logical_evaluator
-from .variable_values import variable_value
+from .variable.logical_variables import logical_value
 
 
 
@@ -22,7 +22,7 @@ class Circuit(object):
 
         # Creates a ground node at the top
         # Always true
-        self.ground_node = Circuit_node_variable(token="GROUND_TOKEN", parent=None, binary_value=variable_value.TRUE, probability_true=1)
+        self.ground_node = Circuit_node_variable(token="GROUND_TOKEN", parent=None, binary_value=logical_value.TRUE, probability_true=1)
 
         # Keeps track of the final output requirements
         self.output_tree = given_output_tree
@@ -77,7 +77,7 @@ class Circuit(object):
                     # {"variable token":variable_value, ...}
                     environment_token_parent = {a_token:environment_parent[a_token][0] for a_token in environment_parent}
 
-                    if variable_value.TRUE == logical_evaluator(observe_statement_tree, environment_token_parent, strict=True, enforce_known_variable=True):
+                    if logical_value.TRUE == logical_evaluator(observe_statement_tree, environment_token_parent):
                         future_parent_nodes.append(Circuit_node_observation(a_parent_node, observe_statement_tree))
 
                 # Mark the parent nodes as the current observation nodes
@@ -119,8 +119,8 @@ class Circuit(object):
                 # Adds two variable nodes, one for each binary value
                 for a_parent_node in available_parent_nodes:
 
-                    future_parent_nodes += [Circuit_node_variable(token_name, a_parent_node, variable_value.TRUE,  variable_flip_value),
-                                            Circuit_node_variable(token_name, a_parent_node, variable_value.FALSE, variable_flip_value)
+                    future_parent_nodes += [Circuit_node_variable(token_name, a_parent_node, logical_value.TRUE,  variable_flip_value),
+                                            Circuit_node_variable(token_name, a_parent_node, logical_value.FALSE, variable_flip_value)
                                             ]
 
                 # Mark the parent nodes as the current observation nodes
@@ -142,7 +142,7 @@ class Circuit(object):
                     environment_token_parent = {a_token:environment_parent[a_token][0] for a_token in environment_parent}
 
                     # Calculates the assignment value
-                    assigned_value = logical_evaluator(present_tree.children[1], environment_token_parent, strict=True, enforce_known_variable=True)
+                    assigned_value = logical_evaluator(present_tree.children[1], environment_token_parent, False)
 
                     # Adds node
                     future_parent_nodes += [Circuit_node_assigned_variable(token_name, a_parent_node, assigned_value)]
@@ -182,7 +182,7 @@ class Circuit(object):
                 cn_1 = current_node_location.children[0]
                 cn_2 = current_node_location.children[1]
 
-                if cn_1.binary_value == variable_value.TRUE:
+                if cn_1.binary_value == logical_value.TRUE:
                     t_node = cn_1
                     f_node = cn_2
                 else:
@@ -285,8 +285,8 @@ class Circuit_node(object):
         self.children = []
 
         # Enforces the variable to be either true or false, no indeterminate
-        assert (binary_value == variable_value.TRUE) or (binary_value == variable_value.FALSE), ...
-        "Binary value must be 'variable_value.TRUE' or 'variable_value.FALSE'"
+        assert (binary_value == logical_value.TRUE) or (binary_value == logical_value.FALSE), ...
+        "Binary value must be 'logical_value.TRUE' or 'logical_value.FALSE'"
 
         self.binary_value = binary_value
 
@@ -298,7 +298,7 @@ class Circuit_node(object):
         self.probability_true = probability_true
 
         # Stores the current probability, depends on whether it is true or false
-        if self.binary_value == variable_value.TRUE:
+        if self.binary_value == logical_value.TRUE:
             self.current_probability = self.probability_true
         else:
             self.current_probability = 1 - self.probability_true
@@ -416,11 +416,10 @@ class Circuit_node(object):
         necessary_chain_observations = self.obtain_chain_observation_tree()
 
         # Verifies if the output (return) statement is met
-        meets_output = variable_value.TRUE == logical_evaluator(given_output_tree, environment_token_vv, strict=True, enforce_known_variable=True)
+        meets_output = logical_value.TRUE == logical_evaluator(given_output_tree, environment_token_vv)
 
         # Verifies that all observations in the chain are met
-        meets_observes = all([variable_value.TRUE == logical_evaluator(a_given_observation_tree, environment_token_vv, strict=True,
-                                                                        enforce_known_variable=True)
+        meets_observes = all([logical_value.TRUE == logical_evaluator(a_given_observation_tree, environment_token_vv)
                                 for a_given_observation_tree in necessary_chain_observations
                             ])
 
@@ -444,11 +443,11 @@ class Circuit_node(object):
         # Obtains the observations in the chain
         necessary_chain_observations = self.obtain_chain_observation_tree()
 
-        logical_evaluation_result = logical_evaluator(given_condition, environment_token_vv, strict=False, enforce_known_variable=False)
+        logical_evaluation_result = logical_evaluator(given_condition, environment_token_vv)
 
         # Verifies if the output (return) statement is met
         # Not strict due to lazy evaluation
-        return (variable_value.TRUE == logical_evaluation_result)
+        return (logical_value.TRUE == logical_evaluation_result)
 
 
 
@@ -473,7 +472,7 @@ class Circuit_node_observation(Circuit_node):
     # Inheritance information obtained from https://www.programiz.com/python-programming/inheritance
     def __init__(self, parent, given_observation_tree):
 
-        Circuit_node.__init__(self, "OBSERVATION", True, parent, variable_value.TRUE, 1, given_observation_tree)
+        Circuit_node.__init__(self, "OBSERVATION", True, parent, logical_value.TRUE, 1, given_observation_tree)
 
 
 
@@ -486,16 +485,16 @@ class Circuit_node_assigned_variable(Circuit_node):
 
         # Requires the assigned value to be either true or false
         # Assignments cannot be indeterminate, this would not make sense
-        assert (assigned_value == variable_value.TRUE) or (assigned_value == variable_value.FALSE), ...
-        "Assigned value must be 'variable_value.TRUE' or 'variable_value.FALSE', it cannot be %s" % (str(assigned_value), )
+        assert (assigned_value == logical_value.TRUE) or (assigned_value == logical_value.FALSE), ...
+        "Assigned value must be 'logical_value.TRUE' or 'logical_value.FALSE', it cannot be %s" % (str(assigned_value), )
         # Enforces the token being different from "OBSERVATION"
         assert token != "OBSERVATION", "Token cannot be 'OBSERVATION', reserved name"
 
-        if assigned_value == variable_value.TRUE:
-            binary_value = variable_value.TRUE
+        if assigned_value == logical_value.TRUE:
+            binary_value = logical_value.TRUE
             probability_true = 1
-        elif assigned_value == variable_value.FALSE:
-            binary_value = variable_value.FALSE
+        elif assigned_value == logical_value.FALSE:
+            binary_value = logical_value.FALSE
             probability_true = 0
 
         Circuit_node.__init__(self, token, False, parent, binary_value, probability_true, None)

@@ -8,8 +8,6 @@ Implements the inference by search algorithm.
 import time
 
 from .inference_circuit import Circuit
-from .sentence_evaluation import logical_evaluator
-from .variable_values import variable_value
 
 
 

@@ -50,14 +50,6 @@ class Discrete_Qualitative(Common):
         Common.__init__(self, given_variable_name, "discrete qualitative", given_expectation, 0, given_expectation, given_expectation, given_probability)
 
 
-    # Different string formatting
-    def __str__(self):
-        return "Variable(name=\"%s\", class=\"%s\", E = %s, Var=%.4f, range = [%s, %s], Pr = %.4f)" % (self.variable_name, self.variable_class,
-                                                                                                self.expectation, self.variance,
-                                                                                                self.lower_bound, self.upper_bound,
-                                                                                                self.probability)
-
-
 
 # Discrete numeric
 class Discrete_Numeric(Common):
