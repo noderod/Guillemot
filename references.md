@@ -30,3 +30,5 @@
 27. [https://matplotlib.org/3.1.0/gallery/style_sheets/dark_background.html](https://matplotlib.org/3.1.0/gallery/style_sheets/dark_background.html)
 28. Using *Herman Schaaf* and *craymichael*'s answer from [https://stackoverflow.com/questions/3899980/how-to-change-the-font-size-on-a-matplotlib-plot](https://stackoverflow.com/questions/3899980/how-to-change-the-font-size-on-a-matplotlib-plot).
 29. [https://www.programiz.com/python-programming/operator-overloading](https://www.programiz.com/python-programming/operator-overloading)
+30. [https://en.wikipedia.org/wiki/Greek_alphabet](https://en.wikipedia.org/wiki/Greek_alphabet)
+
