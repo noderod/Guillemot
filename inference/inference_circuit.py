@@ -60,8 +60,10 @@ class Circuit(object):
 
             future_parent_nodes = []
 
+            data_from_tree = present_tree.data
+
             # Detect observe nodes
-            if present_tree.data == "observe":
+            if data_from_tree == "observe":
                 # Gets the observe statement
                 observe_statement_tree = present_tree.children[0]
 
@@ -89,7 +91,7 @@ class Circuit(object):
 
 
             # Handling if statements, single if statements only
-            elif present_tree.data == "ite":
+            elif data_from_tree == "ite":
 
                 condition     = present_tree.children[0]
                 contents_if   = present_tree.children[1]
@@ -108,8 +110,38 @@ class Circuit(object):
                 available_parent_nodes = future_parent_nodes
 
 
+            # Handles if statements with optional "else if", but no "else"
+            # Only one condition is implemented, if there is a conflict between them, the first one met is implemented
+            elif present_tree.data == "ite_elseif":
+
+                num_branches = len(present_tree.children)//2
+                available_branches = [a_branch_number for a_branch_number in range(0, num_branches)]
+
+                # Keeps track of nodes never accounted for
+                never_considered_nodes = []
+
+                for a_parent_node in available_parent_nodes:
+
+                    # Goes condition by condition
+                    for a_branch in available_branches:
+                        condition = present_tree.children[2*a_branch]
+                        contents   = present_tree.children[2*a_branch + 1]
+
+                        if a_parent_node.evaluate_if_condition(condition):
+                            future_parent_nodes += self.build_subcircuit(a_parent_node, contents)
+                            break
+
+                    else:
+                        # No condition has ever been met
+                        # Add ihe node as is
+                        future_parent_nodes.append(a_parent_node)
+
+                # Update the available to future parent nodes
+                available_parent_nodes = future_parent_nodes
+
+
             # If a node is a flip, add the variable
-            elif present_tree.data == "flip":
+            elif data_from_tree == "flip":
 
                 # Obtains the token
                 token_name = present_tree.children[0].value
@@ -130,7 +162,7 @@ class Circuit(object):
 
 
             # If a node is a bernoulli variable, add the variable (does the same as fip)
-            elif present_tree.data == "bern":
+            elif data_from_tree == "bern":
 
                 # Obtains the token
                 token_name = present_tree.children[0].value
@@ -153,7 +185,7 @@ class Circuit(object):
 
 
             # If a node is an assignment, add this variable
-            elif present_tree.data == "assgn":
+            elif data_from_tree == "assgn":
 
                 token_name = present_tree.children[0].value
                 operation_to_be_executed = present_tree.children[1]
