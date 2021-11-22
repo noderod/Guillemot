@@ -243,7 +243,7 @@ class Circuit(object):
 
 
 
-            # Qualitative variables
+            # Discrete variables
             elif data_from_tree in ["disc_qual", "disc_num"]:
 
                 if data_from_tree == "disc_qual":
@@ -277,6 +277,9 @@ class Circuit(object):
 
 
                 available_parent_nodes = future_parent_nodes
+
+
+
 
 
 
