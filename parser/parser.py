@@ -91,7 +91,6 @@ SimPPL_parser = Lark(r"""
 
     d_uni: NAME ("∼"|"~") "uniform" "(" "a" "=" e "," "b" "=" e ["," e ]* ")"
     d_gau: NAME ("∼"|"~") ("gaussian"|"normal") "(" ("μ"|"mu") "=" e "," ("σ"|"sigma") "=" e ["," e ]* ")"
-
     d_pareto: NAME ("∼"|"~") "pareto" "(" "x_m" "=" e "," ("α"|"alpha") "=" e "," ["," e ]* ")"
     d_beta: NAME ("∼"|"~") "beta" "(" ("α"|"alpha") "=" e "," ("β"|"beta") "=" e ["," e ]* ")"
 

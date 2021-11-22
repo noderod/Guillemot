@@ -244,7 +244,12 @@ class Circuit(object):
 
 
             # Qualitative variables
-            elif data_from_tree == "disc_qual":
+            elif data_from_tree in ["disc_qual", "disc_num"]:
+
+                if data_from_tree == "disc_qual":
+                    discrete_variable_type = "qualitative"
+                else:
+                    discrete_variable_type = "numeric"
 
                 variable_name = present_tree.children[0].value
 
@@ -267,42 +272,12 @@ class Circuit(object):
                         assigned_odds.append(logical_evaluator(odds_tree, environment_parent, final_result=False, numeric_final_result=True))
 
                     # Creates the discrete variable
-                    generated_variables = discrete_creator("qualitative", variable_name, assigned_values, assigned_odds)
+                    generated_variables = discrete_creator(discrete_variable_type, variable_name, assigned_values, assigned_odds)
                     future_parent_nodes += [Circuit_node_variable(variable_name, a_parent_node, a_var) for a_var in generated_variables]
 
 
                 available_parent_nodes = future_parent_nodes
 
-
-            # Numeric (quantitatives) variables
-            elif data_from_tree == "disc_num":
-
-                variable_name = present_tree.children[0].value
-
-                # Gets the number of discrete value assignments
-                num_value_assignments = (len(present_tree.children) - 1)//2
-
-                for a_parent_node in available_parent_nodes:
-
-                    environment_parent = a_parent_node.obtain_chain_environment_vars_only()
-
-                    # Keeps track of the discrete values and their odds
-                    assigned_values = []
-                    assigned_odds   = []
-
-                    for an_assignment in range(0, num_value_assignments):
-                        value_tree = present_tree.children[1 + 2*an_assignment]
-                        odds_tree  = present_tree.children[1 + 2*an_assignment + 1]
-
-                        assigned_values.append(logical_evaluator(value_tree, environment_parent, final_result=False, numeric_final_result=True))
-                        assigned_odds.append(logical_evaluator(odds_tree, environment_parent, final_result=False, numeric_final_result=True))
-
-                    # Creates the discrete variable
-                    generated_variables = discrete_creator("numeric", variable_name, assigned_values, assigned_odds)
-                    future_parent_nodes += [Circuit_node_variable(variable_name, a_parent_node, a_var) for a_var in generated_variables]
-
-
-                available_parent_nodes = future_parent_nodes
 
 
             # If a node is an assignment, add this variable
