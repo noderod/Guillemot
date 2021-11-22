@@ -97,7 +97,7 @@ SimPPL_parser = Lark(r"""
 
 
 
-    p: s ";" "return" e
+    p: s ";" "return" e ";"*
 
 
         %import common.SIGNED_NUMBER
