@@ -87,7 +87,7 @@ SimPPL_parser = Lark(r"""
 
     bern: NAME ("∼"|"~") "bernoulli" "(" e ")"
     disc_num: NAME ("∼"|"~") "discrete_numeric" "(" e "=" e ["," e "=" e ]* ")"
-    disc_qual: NAME ("∼"|"~") "discrete_qualitative" "(" ESCAPED_STRING "=" e ["," ESCAPED_STRING "=" e ]* ")"
+    disc_qual: NAME ("∼"|"~") "discrete_qualitative" "(" e "=" e ["," e "=" e ]* ")"
 
     d_uni: NAME ("∼"|"~") "uniform" "(" "a" "=" e "," "b" "=" e ["," e ]* ")"
     d_gau: NAME ("∼"|"~") ("gaussian"|"normal") "(" ("μ"|"mu") "=" e "," ("σ"|"sigma") "=" e ["," e ]* ")"

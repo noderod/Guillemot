@@ -53,7 +53,7 @@ class Common(object):
         if (self.upper_bound < another_variable.lower_bound) and (not self.overlaps(another_variable)):
             return generate_true_fixed_var()
         else:
-            return generate_false_fixed_var
+            return generate_false_fixed_var()
 
 
     # <=
@@ -61,7 +61,7 @@ class Common(object):
         if ((self.upper_bound < another_variable.lower_bound) and (not self.overlaps(another_variable))) or self.overlaps(another_variable):
             return generate_true_fixed_var()
         else:
-            return generate_false_fixed_var
+            return generate_false_fixed_var()
 
 
     # ==
@@ -69,7 +69,7 @@ class Common(object):
         if self.overlaps(another_variable):
             return generate_true_fixed_var()
         else:
-            return generate_false_fixed_var
+            return generate_false_fixed_var()
 
 
     # >
@@ -77,7 +77,7 @@ class Common(object):
         if (self.lower_bound > another_variable.upper_bound) and (not self.overlaps(another_variable)):
             return generate_true_fixed_var()
         else:
-            return generate_false_fixed_var
+            return generate_false_fixed_var()
 
 
     # >=
@@ -85,7 +85,7 @@ class Common(object):
         if ((self.lower_bound > another_variable.upper_bound) and (not self.overlaps(another_variable))) or self.overlaps(another_variable):
             return generate_true_fixed_var()
         else:
-            return generate_false_fixed_var
+            return generate_false_fixed_var()
 
 
     # String representation
@@ -93,7 +93,7 @@ class Common(object):
 
         # Depending on whether their expectation is a float or a string, it returns the appropriate string format
         if (type(self.expectation).__name__) == "str":
-            return "Variable(name=\"%s\", class=\"%s\", E = %s, Var=%.4f, range = [%s, %s], Pr = %.4f)" % (self.variable_name, self.variable_class,
+            return "Variable(name=\"%s\", class=\"%s\", E = \"%s\", Var=%.4f, range = [\"%s\", \"%s\"], Pr = %.4f)" % (self.variable_name, self.variable_class,
                                                                                                 self.expectation, self.variance,
                                                                                                 self.lower_bound, self.upper_bound,
                                                                                                 self.probability)

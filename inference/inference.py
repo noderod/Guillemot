@@ -14,10 +14,6 @@ from .inference_circuit import Circuit
 # Main function
 def infer(given_program_structure, given_inference_method, requested_to_calculate_time):
 
-    # Keeps track of the observed and return values obtained so far
-    output_true_so_far = 0
-    observed_true_so_far = 0
-
     instructions_tree = given_program_structure.instructions_tree
     output_tree = given_program_structure.output_tree
 

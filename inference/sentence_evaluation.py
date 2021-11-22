@@ -17,7 +17,7 @@ from .variable.logical_variables import logical_value
 # environment_dict ({"token":variable (Common), ....}): Values (objects) corresponding to each token, environment of the variables,
 #  not of the Operating System
 # final_result (bool): Whether or not this is the final or a recursion result (if yes, return logical_value object)
-# numeric_final_result (bool): Returns the expectation (actual value, not a variable object) in the end
+# numeric_final_result (bool): Returns the expectation (actual value, not a variable object) in the end, may be a string
 #  useful when utilizing a logical expression as input
 def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True, numeric_final_result=False):
 
