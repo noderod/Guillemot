@@ -66,6 +66,7 @@ class Common(object):
 
     # ==
     def __eq__(self, another_variable):
+
         if self.overlaps(another_variable):
             return generate_true_fixed_var()
         else:
@@ -104,12 +105,17 @@ class Common(object):
                                                                                                 self.lower_bound, self.upper_bound,
                                                                                                 self.probability)
 
+    # Checks if this variable is reached within the boundsa of another
+    def is_reached_by_variable_within_bounds(self, another_variable):
+        return (element_is_within(self.lower_bound, another_variable.lower_bound, another_variable.upper_bound)
+                        or element_is_within(self.upper_bound, another_variable.lower_bound, another_variable.upper_bound))
+
 
 
     # Checks if there is an overlap between two variables (including edges)
+    # This requires at least one variable to be within the other's bounds
     def overlaps(self, another_variable):
-        return (element_is_within(self.lower_bound, another_variable.lower_bound, another_variable.upper_bound)
-                        or element_is_within(self.upper_bound, another_variable.lower_bound, another_variable.upper_bound))
+        return self.is_reached_by_variable_within_bounds(another_variable) or another_variable.is_reached_by_variable_within_bounds(self)
 
 
 

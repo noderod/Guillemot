@@ -18,7 +18,7 @@ if ((fuel <= 0.2) && (inspection_quality == 0)) {
     engine_failure ~ bernoulli(0.95);
 } else {
     engine_failure ~ bernoulli(0.01);
-}
+};
 
 
 

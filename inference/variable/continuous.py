@@ -8,9 +8,7 @@ Continuous variables.
 from .common import Common
 
 import numpy as np
-from scipy.stats import beta
-from scipy.stats import norm
-from scipy.stats import uniform
+from scipy.stats import beta, norm, pareto, uniform
 
 
 integral_resolution = 20 # intervals
@@ -19,22 +17,22 @@ integral_points = 1 + integral_resolution
 
 
 # Creates a number of continuous distributions ranges
-def generate_discretized_continuous_distribution(given_variable_name, distribution_name, separating_points, distribution_parameter_values):
-
-    # Sorts the separating points so that these can be processed in order
-    ordered_separating_points = sorted(separating_points)
+# distribution_hp [(float), ...]: Distribution hyperparameters, refers to both distribution parameters (such as the mean) and interval separation points
+def generate_discretized_continuous_distribution(given_variable_name, distribution_name, distribution_hp):
 
     # enforces known distribution
     assert distribution_name in ["uniform", "normal", "beta", "pareto"], "'%s' distribution is not accepted" % (distribution_name, )
 
     # Enforces all parameters to be numeric
-    for a_param in distribution_parameter_values:
+    for a_param in distribution_hp:
         param_type = type(a_param).__name__
-        assert (param_type == "int") or (param_type == float), "All parameters, must be int or float type, not '%s'" % (param_type, )
+        assert (param_type == "int") or (param_type == "float"), "All parameters, must be int or float type, not '%s'" % (param_type, )
 
 
     # Generates the different distributions
     if distribution_name == "uniform":
+
+        distribution_parameter_values, ordered_separating_points = obtain_p_sv(distribution_hp, 2)
 
         a, b = distribution_parameter_values
         enforce_array_within_lu(ordered_separating_points, a, b)
@@ -51,6 +49,12 @@ def generate_discretized_continuous_distribution(given_variable_name, distributi
             created_distributions.append(uniform_distribution(given_variable_name, l, u, a, b))
 
     elif distribution_name == "normal":
+
+        distribution_parameter_values, ordered_separating_points = obtain_p_sv(distribution_hp, 2)
+
+        distribution_parameter_values = distribution_hp[:2]
+        separating_points = sorted(distribution_hp[2:])
+
         μ, σ = distribution_parameter_values
 
         five_sigma = 5*σ
@@ -75,6 +79,8 @@ def generate_discretized_continuous_distribution(given_variable_name, distributi
             else:
                 ordered_separating_points = [furthest_left - five_sigma] + ordered_separating_points + [μ + five_sigma]
 
+        created_distributions = []
+
         for wa in range(0, (len(ordered_separating_points) - 1)):
             l = ordered_separating_points[wa]
             u = ordered_separating_points[wa + 1]
@@ -85,11 +91,13 @@ def generate_discretized_continuous_distribution(given_variable_name, distributi
     # Generates the different distributions
     elif distribution_name == "beta":
 
+        distribution_parameter_values, ordered_separating_points = obtain_p_sv(distribution_hp, 2)
+
         α, β = distribution_parameter_values
         enforce_array_within_lu(ordered_separating_points, 0, 1)
 
         # Adds the points to the range as the start and end
-        ordered_separating_points = [a] + ordered_separating_points + [b]
+        ordered_separating_points = [0] + ordered_separating_points + [1]
 
         created_distributions = []
 
@@ -97,13 +105,15 @@ def generate_discretized_continuous_distribution(given_variable_name, distributi
             l = ordered_separating_points[wa]
             u = ordered_separating_points[wa + 1]
 
-            created_distributions.append(uniform_distribution(given_variable_name, l, u, α, β))
+            created_distributions.append(beta_distribution(given_variable_name, l, u, α, β))
 
 
     # Generates the different distributions
     elif distribution_name == "pareto":
 
-        x_m. α = distribution_parameter_values
+        distribution_parameter_values, ordered_separating_points = obtain_p_sv(distribution_hp, 2)
+
+        x_m, α = distribution_parameter_values
         enforce_array_within_lu(ordered_separating_points, x_m, np.inf)
 
         # End point asssigned as the place where CDF >= 0.999999 (close to the 5*σ for the normal distribution)
@@ -120,7 +130,7 @@ def generate_discretized_continuous_distribution(given_variable_name, distributi
             l = ordered_separating_points[wa]
             u = ordered_separating_points[wa + 1]
 
-            created_distributions.append(uniform_distribution(given_variable_name, l, u, x_m. α))
+            created_distributions.append(pareto_distribution(given_variable_name, l, u, x_m, α))
 
     return created_distributions
 
@@ -128,7 +138,7 @@ def generate_discretized_continuous_distribution(given_variable_name, distributi
 
 # Common continuous function
 # Designed as an abstract class to automatically describe the variable in an unified format
-def common_continuous(Common):
+class common_continuous(Common):
 
     def __init__(self, given_variable_name, distribution_name, distribution_parameter_names, distribution_parameter_values,
         given_expectation, given_variance, lower_bound, upper_bound, probability):
@@ -152,7 +162,7 @@ def common_continuous(Common):
 
 
 # Uniform distributions
-def uniform_distribution(common_continuous):
+class uniform_distribution(common_continuous):
 
     # a (int/float): Start of range
     # b (int/float): End of range
@@ -165,13 +175,13 @@ def uniform_distribution(common_continuous):
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
         probability, E, Var = get_PR_E_Var(ab=get_integral_points(lower_bound, upper_bound), cdist=uniform(loc = a, scale = b))
 
-        common_continuous.__init__(self, given_variable_name, "Uniform", distribution_parameter_names, distribution_parameter_values,
+        common_continuous.__init__(self, given_variable_name, "Uniform", ["a", "b"], [a, b],
             E, Var, lower_bound, upper_bound, probability)
 
 
 
 # Normal (Gaussian) distributions
-def normal_distribution(common_continuous):
+class normal_distribution(common_continuous):
 
     # μ (int/float): Expectationn
     # σ (int/float): Standard deviation
@@ -185,13 +195,13 @@ def normal_distribution(common_continuous):
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.norm.html
         probability, E, Var = get_PR_E_Var(ab=get_integral_points(zl, zu), cdist=norm())
 
-        common_continuous.__init__(self, given_variable_name, "Normal", distribution_parameter_names, distribution_parameter_values,
+        common_continuous.__init__(self, given_variable_name, "Normal", ["μ", "σ"], [μ, σ],
             E, Var, lower_bound, upper_bound, probability)
 
 
 
 # Beta distributions
-def beta_distribution(common_continuous):
+class beta_distribution(common_continuous):
 
     # α (int/float)
     # β (int/float)
@@ -201,17 +211,17 @@ def beta_distribution(common_continuous):
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.beta.html
         probability, E, Var = get_PR_E_Var(ab=get_integral_points(lower_bound, upper_bound), cdist=beta(α, β))
 
-        common_continuous.__init__(self, given_variable_name, "Beta", distribution_parameter_names, distribution_parameter_values,
+        common_continuous.__init__(self, given_variable_name, "Beta", ["α", "β"], [α, β],
             E, Var, lower_bound, upper_bound, probability)
 
 
 
 # Pareto distributions
-def pareto_distribution(common_continuous):
+class pareto_distribution(common_continuous):
 
     # α (int/float)
     # β (int/float)
-    def __init__(self, given_variable_name, lower_bound, upper_bound, x_m. α):
+    def __init__(self, given_variable_name, lower_bound, upper_bound, x_m, α):
 
         # Enforces real values
         # Based on https://en.wikipedia.org/wiki/Pareto_distribution
@@ -224,7 +234,7 @@ def pareto_distribution(common_continuous):
         # https://towardsdatascience.com/generating-pareto-distribution-in-python-2c2f77f70dbf
         probability, E, Var = get_PR_E_Var(ab=get_integral_points(lower_bound, upper_bound), cdist=pareto(α, scale=x_m))
 
-        common_continuous.__init__(self, given_variable_name, "Beta", distribution_parameter_names, distribution_parameter_values,
+        common_continuous.__init__(self, given_variable_name, "Pareto", ["x_m", "α"], [x_m, α],
             E, Var, lower_bound, upper_bound, probability)
 
 
@@ -322,3 +332,13 @@ def enforce_array_within_lu(given_array, l, u):
 
     for x in given_array:
         enforce_x_within_lu(x, l, u)
+
+
+
+# Divides a list of hyperparameters into distribution paremters themselves and sorted interval separation values
+# The distribution parameters always appear first
+# given_hp [(int), ...]
+# num_p (int): Number of distribution parameters
+def obtain_p_sv(given_hp, num_p):
+    return [given_hp[:num_p], sorted(given_hp[num_p:])]
+

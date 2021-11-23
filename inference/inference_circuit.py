@@ -11,7 +11,23 @@ from .aux_inference import add_to_stack, Simple_Stack, select_random_by_weight
 from .sentence_evaluation import logical_evaluator
 from .variable.common import generate_true_fixed_var
 from .variable.discrete import discrete_creator, generate_bernoulli
+from .variable.continuous import generate_discretized_continuous_distribution
 from .variable.logical_variables import logical_value
+
+
+
+# Rapidly matches discrete and continuous parse to the variable type considered by the variable object generator
+parsdisc_to_disc = {
+    "disc_num":"numeric",
+    "disc_qual":"qualitative"
+}
+
+parscon_to_con = {
+    "d_uniform":"uniform",
+    "d_gaussian":"normal",
+    "d_pareto":"pareto",
+    "d_beta":"beta"
+}
 
 
 
@@ -191,8 +207,9 @@ class Circuit(object):
 
                     else:
                         # No condition has ever been met
-                        # Add ihe node as is
-                        future_parent_nodes.append(a_parent_node)
+                        # Add else conditions
+                        contents_else = present_tree.children[-1]
+                        future_parent_nodes += self.build_subcircuit(a_parent_node, contents_else)
 
                 # Update the available to future parent nodes
                 available_parent_nodes = future_parent_nodes
@@ -246,10 +263,7 @@ class Circuit(object):
             # Discrete variables
             elif data_from_tree in ["disc_qual", "disc_num"]:
 
-                if data_from_tree == "disc_qual":
-                    discrete_variable_type = "qualitative"
-                else:
-                    discrete_variable_type = "numeric"
+                discrete_variable_type = parsdisc_to_disc[data_from_tree]
 
                 variable_name = present_tree.children[0].value
 
@@ -280,6 +294,33 @@ class Circuit(object):
 
 
 
+            # Continuous variables
+            elif data_from_tree in ["d_uniform", "d_gaussian", "d_pareto", "d_beta"]:
+
+                distribution_name = parscon_to_con[data_from_tree]
+
+                variable_name = present_tree.children[0].value
+
+                # Gets the number of discrete value assignments
+                num_hyperparameters = len(present_tree.children) - 1
+
+                for a_parent_node in available_parent_nodes:
+
+                    environment_parent = a_parent_node.obtain_chain_environment_vars_only()
+
+                    # Keeps track of the discrete values and their odds
+                    assigned_hyperparameters = []
+
+                    for an_hp in range(0, num_hyperparameters):
+                        hp_tree = present_tree.children[1 + an_hp]
+                        assigned_hyperparameters.append(logical_evaluator(hp_tree, environment_parent, final_result=False, numeric_final_result=True))
+
+                    # Creates the discrete variable
+                    generated_variables = generate_discretized_continuous_distribution(variable_name, distribution_name, assigned_hyperparameters)
+                    future_parent_nodes += [Circuit_node_variable(variable_name, a_parent_node, a_var) for a_var in generated_variables]
+
+
+                available_parent_nodes = future_parent_nodes
 
 
 
