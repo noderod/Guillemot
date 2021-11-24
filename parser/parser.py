@@ -59,9 +59,7 @@ SimPPL_parser = Lark(r"""
     | ite_complete
     | reject
     | marg
-    | margvar
     | elim
-    | elimvar
     | bern
     | disc_num
     | disc_qual
@@ -81,10 +79,8 @@ SimPPL_parser = Lark(r"""
     ite_complete: "if" e "{" s ";"* "}" ["else" "if" e "{" s ";"* "}"]* "else" "{" s ";"* "}"
 
     reject: "reject" e
-    marg: "marginalize" "(" e ")"
-    margvar: "marginalize_variable" "(" NAME ["," NAME ]*  ")"
-    elim: "eliminate" "(" e ")"
-    elimvar: "eliminate_variable" "(" NAME ["," NAME ]*  ")"
+    marg: "marginalize" "(" e ["," e ]* ")"
+    elim: "eliminate" "(" e ["," e ]* ")"
 
 
     bern: NAME ("∼"|"~") "bernoulli" "(" e ")"

@@ -1,0 +1,37 @@
+// SUMMARY
+//
+// Marginalization example
+// A traveler visits multiple cities, all visits are independent
+// Observe the increase in computation time when removing the "marginalize" commands (for example, by commenting them with "//")
+
+city0 ~ discrete_qualitative("01"=6, "02"=4, "03"=5);
+city1 ~ discrete_qualitative("11"=6, "12"=4, "13"=5);
+marginalize(city0, city1);
+
+
+city2 ~ discrete_qualitative("21"=6, "22"=4, "23"=5);
+marginalize(city0, city1);
+
+city3 ~ discrete_qualitative("31"=6, "32"=4, "33"=5);
+marginalize(city0, city1);
+
+city4 ~ discrete_qualitative("41"=6, "42"=4, "43"=5);
+marginalize(city0, city1);
+
+city5 ~ discrete_qualitative("51"=6, "52"=4, "53"=5);
+marginalize(city0, city1);
+
+city6 ~ discrete_qualitative("61"=6, "62"=4, "63"=5);
+marginalize(city0, city1);
+
+city7 ~ discrete_qualitative("71"=6, "72"=4, "73"=5);
+marginalize(city0, city1);
+
+city8 ~ discrete_qualitative("81"=6, "82"=4, "83"=5);
+marginalize(city0, city1);
+
+city9 ~ discrete_qualitative("91"=6, "92"=4, "93"=5);
+marginalize(city0, city1);
+
+
+return ((city0 == "03") && (city1 == "11"));

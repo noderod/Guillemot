@@ -136,6 +136,54 @@ class Circuit(object):
                 available_parent_nodes = future_parent_nodes
 
 
+            # Marginalizes one or multiple expressions (note that variables can be expressions too)
+            # Nodes which have the same value for all expressions are combined into one when marginalized
+            elif data_from_tree == "marg":
+
+                #print(present_tree.pretty())
+                #import sys; sys.exit()
+
+                # Obtains the expressions that will be marginalized by
+                marginalization_conditions = present_tree.children
+
+                # Storres nodes where the marginalization expressions hold the same values
+                # {"[m1, ...]":[Circuit node 1, ...], ...}
+                marg_conditions_to_nodes = {}
+
+                # Goes node by node
+                for a_parent_node in available_parent_nodes:
+
+                    marginalized_values = []
+                    environment_parent = a_parent_node.obtain_chain_environment_vars_only()
+
+                    # Goes condition by condition
+                    for a_marg_condition in marginalization_conditions:
+                        marginalized_values.append(logical_evaluator(a_marg_condition, environment_parent,
+                            final_result=False, numeric_final_result=True))
+
+
+                    # Checks and stores it in the marginalization conditions as a string
+                    marginalized_values_str = str(marginalized_values)
+                    if marginalized_values_str in marg_conditions_to_nodes:
+                        marg_conditions_to_nodes[marginalized_values_str].append(a_parent_node)
+                    else:
+                        marg_conditions_to_nodes[marginalized_values_str] = [a_parent_node]
+
+
+                # Joins the nodes with the same marginalization conditions
+                for a_set_of_marg_conditions_values in marg_conditions_to_nodes:
+                    nodes_with_same_marginalization_conditions = marg_conditions_to_nodes[a_set_of_marg_conditions_values]
+
+
+                    future_parent_nodes += [Circuit_node_compressed("MARG", nodes_with_same_marginalization_conditions)]
+
+
+                # Saves the memory utilized for the marginalization
+                del marg_conditions_to_nodes
+
+                available_parent_nodes = future_parent_nodes
+
+
 
             # Handling if statements, single if statements only
             elif data_from_tree == "ite":
@@ -548,13 +596,15 @@ class Circuit_node(object):
         # Updates the environment with the current variable
         # If the variable is already in the environment, do not update
         # This corresponds to leaving the last updated variable value
-        if (self.token not in environment_so_far) and (self.token != "OBSERVATION") and (not self.compressed_node):
-            recursive_environment[self.token] = [self.variable_value, self.current_probability]
+        if (self.token not in environment_so_far):
 
-        # Compressed nodes, retrieve all values from their environment
-        elif self.compressed_node:
-            for a_var_token in self.compressed_environment:
-                recursive_environment[self.a_var_token] = [self.compressed_environment[a_var_token], self.probability]
+            if (self.token != "OBSERVATION") and (not self.compressed_node):
+                recursive_environment[self.token] = [self.variable_value, self.current_probability]
+
+            # Compressed nodes, retrieve all values from their environment
+            elif self.compressed_node:
+                for a_var_token in self.compressed_environment:
+                    recursive_environment[a_var_token] = self.compressed_environment[a_var_token]
 
 
         # ---------------------------------------
@@ -590,13 +640,10 @@ class Circuit_node(object):
         chain_Pr = self.obtain_chain_probability()
 
         # Obtains the environment, tokens and variable values only
-        environment_2 = self.obtain_chain_environment()
-
-        # {"variable token":variable_value, ...}
-        environment_token_vv = {a_token:environment_2[a_token][0] for a_token in environment_2}
+        environment_2 = self.obtain_chain_environment_vars_only()
 
         # Verifies if the output (return) statement is met
-        meets_output = logical_value.TRUE == logical_evaluator(given_output_tree, environment_token_vv, True, False)
+        meets_output = logical_value.TRUE == logical_evaluator(given_output_tree, environment_2, True, False)
 
         return [chain_Pr, meets_output]
 
@@ -609,12 +656,9 @@ class Circuit_node(object):
         chain_Pr = self.obtain_chain_probability()
 
         # Obtains the environment, tokens and variable values only
-        environment_2 = self.obtain_chain_environment()
+        environment_2 = self.obtain_chain_environment_vars_only()
 
-        # {"variable token":variable_value, ...}
-        environment_token_vv = {a_token:environment_2[a_token][0] for a_token in environment_2}
-
-        logical_evaluation_result = logical_evaluator(given_condition, environment_token_vv, True, False)
+        logical_evaluation_result = logical_evaluator(given_condition, environment_2, True, False)
 
         # Verifies if the output (return) statement is met
         # Not strict due to lazy evaluation
@@ -630,7 +674,7 @@ class Circuit_node_variable(Circuit_node):
     def __init__(self, token, parent, variable_value):
 
         # Enforces the token being different from "OBSERVATION"
-        assert token not in  ["OBSERVATION", "MARG", "MARGVAR", "ELIM", "ELIMVAR", "DEADEND"], "Token cannot be '%s', reserved name" % (token, )
+        assert token not in  ["OBSERVATION", "MARG", "ELIM", "DEADEND"], "Token cannot be '%s', reserved name" % (token, )
 
         Circuit_node.__init__(self, token, observation_node=False, parents=[parent], variable_value=variable_value,
             current_probability=variable_value.probability, observation_tree=None, compressed_node=False,  compressed_environment=None,
@@ -669,8 +713,8 @@ class Circuit_node_compressed(Circuit_node):
     # Inheritance information obtained from https://www.programiz.com/python-programming/inheritance
     # pre_compression_nodes (arr) (Circuit_node): Refers to the nodes before compression
     def __init__(self, requested_operation, pre_compression_nodes):
-        valid_operations = ["OBSERVATION", "REJECTION", "MARG", "MARGVAR", "ELIM", "ELIMVAR", "DEADEND"]
-        assert requested_operation in  ["OBSERVATION", "REJECTION", "MARG", "MARGVAR", "ELIM", "ELIMVAR"],...
+        valid_operations = ["MARG", "ELIM", "DEADEND"]
+        assert requested_operation in  ["MARG", "ELIM"],...
         "Operation must be in '%s', currrently is '%s'" % (str(valid_operations), requested_operation)
 
         # Obtains all the probabilities
