@@ -66,11 +66,18 @@ class Common(object):
 
     # ==
     def __eq__(self, another_variable):
-
         if self.overlaps(another_variable):
             return generate_true_fixed_var()
         else:
             return generate_false_fixed_var()
+
+
+    # !=
+    def __ne__(self, another_variable):
+        if self.overlaps(another_variable):
+            return generate_false_fixed_var()
+        else:
+            return generate_true_fixed_var()
 
 
     # >

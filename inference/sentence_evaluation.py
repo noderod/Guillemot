@@ -126,7 +126,6 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
         # Gets the element to be checked 2 levels down ("expect" tree)
         first_tree, second_tree = tree_to_be_considered.children[0].children
 
-        # TODO
         # Evaluates the elements with the same environment and requirements as here
         first_evaluated  = logical_evaluator(first_tree, environment_dict, False)
         second_evaluated = logical_evaluator(second_tree, environment_dict, False)
@@ -134,12 +133,23 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
         operation_logical_value = first_evaluated == second_evaluated
 
 
+    elif operation_name == "not_equal_operation":
+
+        # Gets the element to be checked 2 levels down ("expect" tree)
+        first_tree, second_tree = tree_to_be_considered.children[0].children
+
+        # Evaluates the elements with the same environment and requirements as here
+        first_evaluated  = logical_evaluator(first_tree, environment_dict, False)
+        second_evaluated = logical_evaluator(second_tree, environment_dict, False)
+
+        operation_logical_value = first_evaluated != second_evaluated
+
+
     elif operation_name == "less_operation":
 
         # Gets the element to be checked 2 levels down ("expect" tree)
         first_tree, second_tree = tree_to_be_considered.children[0].children
 
-        # TODO
         # Evaluates the elements with the same environment and requirements as here
         first_evaluated  = logical_evaluator(first_tree, environment_dict, False)
         second_evaluated = logical_evaluator(second_tree, environment_dict, False)
@@ -152,7 +162,6 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
         # Gets the element to be checked 2 levels down ("expect" tree)
         first_tree, second_tree = tree_to_be_considered.children[0].children
 
-        # TODO
         # Evaluates the elements with the same environment and requirements as here
         first_evaluated  = logical_evaluator(first_tree, environment_dict, False)
         second_evaluated = logical_evaluator(second_tree, environment_dict, False)
@@ -165,7 +174,6 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
         # Gets the element to be checked 2 levels down ("expect" tree)
         first_tree, second_tree = tree_to_be_considered.children[0].children
 
-        # TODO
         # Evaluates the elements with the same environment and requirements as here
         first_evaluated  = logical_evaluator(first_tree, environment_dict, False)
         second_evaluated = logical_evaluator(second_tree, environment_dict, False)
@@ -178,7 +186,6 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
         # Gets the element to be checked 2 levels down ("expect" tree)
         first_tree, second_tree = tree_to_be_considered.children[0].children
 
-        # TODO
         # Evaluates the elements with the same environment and requirements as here
         first_evaluated  = logical_evaluator(first_tree, environment_dict, False)
         second_evaluated = logical_evaluator(second_tree, environment_dict, False)

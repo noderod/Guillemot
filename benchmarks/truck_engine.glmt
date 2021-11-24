@@ -1,6 +1,7 @@
 // SUMMARY
 //
-// Determines the probability of a truck's engine failure
+// Determines the probability of a truck engine failure
+// Not real data
 
 city ~ discrete_qualitative("City1"=6, "City2"=4, "City3"=5);
 fuel ~ beta(α=5, β=1, 0.4, 0.7);

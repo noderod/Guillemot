@@ -27,6 +27,7 @@ SimPPL_parser = Lark(r"""
     | expect -> expectation_operation
     | var -> variance_operation
     | equal_check -> equal_operation
+    | not_equal_check -> not_equal_operation
     | less_check -> less_operation
     | lt_check -> lt_operation
     | greater_check -> greater_operation
@@ -40,11 +41,12 @@ SimPPL_parser = Lark(r"""
     expect: "E" "(" e ")"
     var : "Var" "(" e ")"
 
-    equal_check:   ("(" "==" e e ")"|"(" e "==" e ")")
-    less_check:    ("(" "<" e e ")"|"(" e "<" e ")")
-    lt_check:      ("(" "<=" e e ")"|"(" e "<=" e ")")
-    greater_check: ("(" ">" e e ")"|"(" e ">" e ")")
-    gt_check:      ("("" >=" e e ")"|"(" e ">=" e ")")
+    equal_check:      ("(" "==" e e ")"|"(" e "==" e ")")
+    not_equal_check:  ("(" "!=" e e ")"|"(" e "!=" e ")")
+    less_check:       ("(" "<" e e ")"|"(" e "<" e ")")
+    lt_check:         ("(" "<=" e e ")"|"(" e "<=" e ")")
+    greater_check:    ("(" ">" e e ")"|"(" e ">" e ")")
+    gt_check:         ("("" >=" e e ")"|"(" e ">=" e ")")
 
 
 

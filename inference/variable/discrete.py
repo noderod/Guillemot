@@ -21,6 +21,9 @@ def discrete_creator(requested_discrete_type, given_variable_name, given_expecta
 
     combined_odds = sum(given_odds)
 
+    # Enforced overall odds are larger than zero
+    assert combined_odds > 0, "Sum of odds must be > 0, current value = %.4f" % (combined_odds, )
+
     # Creates a set of variables
     created_variables = []
 
