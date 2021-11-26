@@ -57,7 +57,9 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
 
             # Variable is not in the environment, throw an error
             if variable_name not in environment_dict:
-                print("Variable %s not in environment" % (variable_name, ))
+                # Based on "MarcH"'s answer on
+                # https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python
+                print("Variable %s not in environment" % (variable_name, ), file=sys.stderr)
                 sys.exit(1)
 
             # All variables must be assigned, False if one is not available
