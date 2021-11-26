@@ -424,7 +424,7 @@ class Circuit(object):
                     assigned_variable = logical_evaluator(operation_to_be_executed, environment_parent, final_result=False, numeric_final_result=False)
 
                     # Adds node
-                    future_parent_nodes += [Circuit_node_variable(token_name, a_parent_node, generate_true_fixed_var())]
+                    future_parent_nodes += [Circuit_node_variable(token_name, a_parent_node, assigned_variable)]
 
                 available_parent_nodes = future_parent_nodes
 
