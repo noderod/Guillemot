@@ -215,7 +215,7 @@ class Circuit(object):
                 for a_set_of_remaining_vars in remaining_vars_to_nodes:
                     nodes_with_same_remaining_vars = remaining_vars_to_nodes[a_set_of_remaining_vars]
 
-                    future_parent_nodes += [Circuit_node_compressed("ELIM", nodes_with_same_remaining_vars)]
+                    future_parent_nodes += [Circuit_node_compressed("ELIM", nodes_with_same_remaining_vars, elimination_variable_names)]
 
                 # Saves the memory utilized for the variable elimination
                 del remaining_vars_to_nodes
@@ -751,7 +751,8 @@ class Circuit_node_compressed(Circuit_node):
 
     # Inheritance information obtained from https://www.programiz.com/python-programming/inheritance
     # pre_compression_nodes (arr) (Circuit_node): Refers to the nodes before compression
-    def __init__(self, requested_operation, pre_compression_nodes):
+    # variable_names_to_ignore {"variable name":True, ...}: Variable names which are not to be stored
+    def __init__(self, requested_operation, pre_compression_nodes, variable_names_to_ignore={}):
         valid_operations = ["MARG", "ELIM", "DEADEND"]
         assert requested_operation in  ["MARG", "ELIM"],...
         "Operation must be in '%s', currrently is '%s'" % (str(valid_operations), requested_operation)
@@ -765,6 +766,9 @@ class Circuit_node_compressed(Circuit_node):
         # Assumed that the variables after compression which have been compressed will not be used
         # and that different compressed nodes will have separate variables of interest
         post_compression_env = pre_compression_nodes[0].obtain_chain_environment()
+
+        for a_var_to_ignore in variable_names_to_ignore:
+            post_compression_env.pop(a_var_to_ignore, None)
 
         Circuit_node.__init__(self, requested_operation, observation_node=False, parents=pre_compression_nodes, variable_value=generate_true_fixed_var(),
             current_probability=combined_Pr, observation_tree=None, compressed_node=True,  compressed_environment=post_compression_env,
