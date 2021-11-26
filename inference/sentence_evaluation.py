@@ -6,6 +6,7 @@ Evaluates a sentence, logical only, provided the meaning of the tokens.
 
 
 import re
+import sys
 
 from .variable.common import Fixed, generate_true_fixed_var, generate_false_fixed_var
 from .variable.logical_variables import logical_value
@@ -53,6 +54,12 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
             operation_logical_value = Fixed("PLACEHOLDER", float(variable_name))
 
         else:
+
+            # Variable is not in the environment, throw an error
+            if variable_name not in environment_dict:
+                print("Variable %s not in environment" % (variable_name, ))
+                sys.exit(1)
+
             # All variables must be assigned, False if one is not available
             operation_logical_value = generate_false_fixed_var()
 
