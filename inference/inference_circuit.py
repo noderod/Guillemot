@@ -140,13 +140,10 @@ class Circuit(object):
             # Nodes which have the same value for all expressions are combined into one when marginalized
             elif data_from_tree == "marg":
 
-                #print(present_tree.pretty())
-                #import sys; sys.exit()
-
                 # Obtains the expressions that will be marginalized by
                 marginalization_conditions = present_tree.children
 
-                # Storres nodes where the marginalization expressions hold the same values
+                # Stores nodes where the marginalization expressions hold the same values
                 # {"[m1, ...]":[Circuit node 1, ...], ...}
                 marg_conditions_to_nodes = {}
 
@@ -160,7 +157,6 @@ class Circuit(object):
                     for a_marg_condition in marginalization_conditions:
                         marginalized_values.append(logical_evaluator(a_marg_condition, environment_parent,
                             final_result=False, numeric_final_result=True))
-
 
                     # Checks and stores it in the marginalization conditions as a string
                     marginalized_values_str = str(marginalized_values)
@@ -177,9 +173,52 @@ class Circuit(object):
 
                     future_parent_nodes += [Circuit_node_compressed("MARG", nodes_with_same_marginalization_conditions)]
 
-
                 # Saves the memory utilized for the marginalization
                 del marg_conditions_to_nodes
+
+                available_parent_nodes = future_parent_nodes
+
+
+
+            # Eliminates one or multiple variables (only variables themselves may be eliminated, not expressions)
+            # It considers the variables utilized in each elimination expression
+            # Combines together all nodes which have the same values different values for all the variables not utilized in the expressions
+            elif data_from_tree == "elimvar":
+
+                # Obtains the elimination variables in a dictionary for fast access
+                elimination_variable_names = {a_child_token.value:True for a_child_token in present_tree.children}
+
+                # Stores nodes where the variables which are not to be eliminated
+                # {"[var1, ...]":[Circuit node 1, ...], ...}
+                remaining_vars_to_nodes = {}
+
+                # Goes node by node
+                for a_parent_node in available_parent_nodes:
+
+                    marginalized_values = []
+                    environment_parent = a_parent_node.obtain_chain_environment_vars_only()
+
+                    # Obtains the variables which are not to be eliminated
+                    # Sorted for repeatability
+                    non_eliminated_vars = sorted([str(environment_parent[a_var]) for a_var in environment_parent if a_var not in elimination_variable_names])
+
+                    # Checks and stores it as a string
+                    non_eliminated_vars_str = str(non_eliminated_vars)
+
+                    if non_eliminated_vars_str in remaining_vars_to_nodes:
+                        remaining_vars_to_nodes[non_eliminated_vars_str].append(a_parent_node)
+                    else:
+                        remaining_vars_to_nodes[non_eliminated_vars_str] = [a_parent_node]
+
+
+                # Joins the nodes with the same marginalization conditions
+                for a_set_of_remaining_vars in remaining_vars_to_nodes:
+                    nodes_with_same_remaining_vars = remaining_vars_to_nodes[a_set_of_remaining_vars]
+
+                    future_parent_nodes += [Circuit_node_compressed("ELIM", nodes_with_same_remaining_vars)]
+
+                # Saves the memory utilized for the variable elimination
+                del remaining_vars_to_nodes
 
                 available_parent_nodes = future_parent_nodes
 
