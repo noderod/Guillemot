@@ -60,6 +60,7 @@ SimPPL_parser = Lark(r"""
     | reject
     | marg
     | elimvar
+    | print
     | bern
     | disc_num
     | disc_qual
@@ -81,6 +82,8 @@ SimPPL_parser = Lark(r"""
     reject: "reject" e
     marg: "marginalize" "(" e ["," e ]* ")"
     elimvar: "eliminate_variable" "(" NAME ["," NAME ]* ")"
+
+    print: "print" "(" e ")"
 
 
     bern: NAME ("∼"|"~") "bernoulli" "(" e ")"

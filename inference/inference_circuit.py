@@ -108,7 +108,7 @@ class Circuit(object):
 
 
             # Reject statement
-            # Opposite of observe, ignore nodes that meet the statement
+            # Opposite of observe, ignore nodes that meet the expression
             elif data_from_tree == "reject":
                 # Gets the observe statement
                 observe_statement_tree = present_tree.children[0]
@@ -221,6 +221,26 @@ class Circuit(object):
                 del remaining_vars_to_nodes
 
                 available_parent_nodes = future_parent_nodes
+
+
+
+            # Prints the result of an expression for all parent nodes
+            elif data_from_tree == "print":
+
+                node_counter = 0
+                expression_to_be_shown = present_tree.children[0]
+
+                for a_parent_node in available_parent_nodes:
+
+                    print("-> Leaf node %d:" % node_counter)
+
+                    environment_parent = a_parent_node.obtain_chain_environment_vars_only()
+                    tmp_var = logical_evaluator(expression_to_be_shown, environment_parent, final_result=False, numeric_final_result=False)
+
+                    print("    " + str(tmp_var) + "\n")
+
+
+                    node_counter += 1
 
 
 
