@@ -730,8 +730,6 @@ class Circuit_node(object):
     # return environment dictionary = {"token":[variable, current_probability (float)]}
     def obtain_chain_environment(self, environment_so_far = {}):
 
-        # EXPERIMENTAL
-        # ---------------------------------------
         recursive_environment = deepcopy(environment_so_far)
 
         # Updates the environment with the current variable
@@ -748,18 +746,12 @@ class Circuit_node(object):
                     recursive_environment[a_var_token] = self.compressed_environment[a_var_token]
 
 
-        # ---------------------------------------
-
-        # OLD VERSION
-        #environment_so_far[self.token] = [self.binary_value, self.current_probability]
-
         if self.parents == [None]:
             #print(environment_so_far)
             return environment_so_far
         else:
             return self.parents[0].obtain_chain_environment(recursive_environment)
-            # OLD
-            #return self.parent.obtain_chain_environment(environment_so_far)
+
 
 
     # Obtains the variables alone from a chain/trace
