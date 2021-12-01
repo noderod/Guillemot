@@ -6,6 +6,10 @@ Implements an inference circuit and associated elements.
 
 
 from copy import deepcopy
+from uuid import uuid4
+
+import matplotlib.pyplot as plt
+import networkx as nx
 
 from .aux_inference import add_to_stack, Simple_Stack, select_random_by_weight
 from .sentence_evaluation import logical_evaluator
@@ -368,7 +372,7 @@ class Circuit(object):
 
 
             # Discrete variables
-            elif data_from_tree in ["disc_qual", "disc_num"]:
+            elif data_from_tree in parsdisc_to_disc:
 
                 discrete_variable_type = parsdisc_to_disc[data_from_tree]
 
@@ -402,7 +406,7 @@ class Circuit(object):
 
 
             # Continuous variables
-            elif data_from_tree in ["d_uniform", "d_gaussian", "d_pareto", "d_beta"]:
+            elif data_from_tree in parscon_to_con:
 
                 distribution_name = parscon_to_con[data_from_tree]
 
@@ -447,6 +451,81 @@ class Circuit(object):
                     future_parent_nodes += [Circuit_node_variable(token_name, a_parent_node, assigned_variable)]
 
                 available_parent_nodes = future_parent_nodes
+
+
+
+            # Shows the circuit
+            # No action to the variables themselves is done
+            elif data_from_tree == "show_circuit":
+
+                # Gets the ground node
+                ground_node = available_parent_nodes[0].obtain_circuit_top()
+
+                # Empty directed graph
+                # Based on https://networkx.org/documentation/stable/reference/introduction.html
+                complete_circuit_digraph = nx.DiGraph()
+
+                # Each node is assigned a number
+                # [[Circuit node, assigned number]]
+                next_number = 0
+                maximum_possible_number = next_number
+                origin_node_pairs = [[ground_node, next_number]]
+
+                # Keeps track of seen nodes (relevant for marginalization and maximization nodes)
+                # {"Node ID":node number (int), ...}
+                seen_nodes = {ground_node.node_ID:next_number}
+
+                while origin_node_pairs != []:
+
+                    # Resets the next pairs of nodes to be explored
+                    next_node_pairs = []
+
+                    for an_original_node_pair in origin_node_pairs:
+
+                        [original_circuit_node, original_number] = an_original_node_pair
+
+                        # Obtains the node children
+                        for a_next_node_pair in original_circuit_node.children:
+
+                            next_circuit_node = a_next_node_pair
+                            next_circuit_node_ID = next_circuit_node.node_ID
+
+                            # Obtains the next number
+                            if next_circuit_node_ID in seen_nodes:
+                                next_number = seen_nodes[next_circuit_node_ID]
+                            else:
+                                # Assigns a new number
+                                next_number = maximum_possible_number
+                                maximum_possible_number += 1
+
+                                # Adds the node as seen
+                                seen_nodes[next_circuit_node_ID] = next_number
+
+
+                            # Adds one to the number to be used by the next node
+                            next_number += 1
+
+                            # Adds the edge to the graph
+                            complete_circuit_digraph.add_edge(original_number, next_number)
+
+                            # Adds the node as a next node to consider
+                            next_node_pairs.append([next_circuit_node, next_number])
+
+                    # Replaces the old by the new
+                    origin_node_pairs = next_node_pairs
+
+                # Draws the graph
+                # Based on
+                # https://networkx.org/documentation/stable/reference/generated/networkx.drawing.nx_pylab.draw_networkx.html
+                # https://networkx.org/documentation/latest/auto_examples/basic/plot_properties.html#sphx-glr-auto-examples-basic-plot-properties-py
+                # https://networkx.org/documentation/stable/reference/generated/networkx.drawing.layout.planar_layout.html
+                nx.draw(complete_circuit_digraph, pos=nx.planar_layout(complete_circuit_digraph), arrows=True, with_labels=False, node_size=1)
+                plt.show()
+
+                # Save memory by deleting no longer useful items
+                del seen_nodes, next_node_pairs, origin_node_pairs
+
+
 
             # Otherwise, find the children trees and explore them
             else:
@@ -604,6 +683,9 @@ class Circuit_node(object):
             for ma in range(0, len(parents)):
                 self.parents[ma].children.append(self)
 
+        # Assigns an unique ID to each node
+        self.node_ID = str(uuid4())
+
 
     # Custom node representation in string form
     # Obtained using "OneCricketeer" and "Ignacio Vazquez-Abrams"'s answer from
@@ -723,6 +805,18 @@ class Circuit_node(object):
         # Not strict due to lazy evaluation
         return (logical_value.TRUE == logical_evaluation_result)
 
+
+
+    # Obtains the node at the top of the circuit
+    # Greedily advances via the first parent
+    # This is only an issue if going through margnizalization nodess
+    def obtain_circuit_top(self):
+
+        # No parents necessarily implies being the top node
+        if self.parents == [None]:
+            return self
+        else:
+            return self.parents[0].obtain_circuit_top()
 
 
 # Creates a circuit node for a variable.

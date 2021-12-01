@@ -5,6 +5,8 @@ Common variable to inherit from, not designed to be used directly.
 """
 
 
+from uuid import uuid4
+
 from .logical_variables import logical_value
 
 
