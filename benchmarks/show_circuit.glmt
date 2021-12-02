@@ -1,0 +1,17 @@
+// SUMMARY
+//
+// Shows a circuit
+
+city0 ~ discrete_qualitative("01"=6, "02"=4, "03"=5);
+
+city1 ~ discrete_qualitative("11"=6, "12"=4, "13"=5);
+city2 ~ discrete_qualitative("21"=6, "22"=4, "23"=5);
+city3 ~ discrete_qualitative("31"=6, "32"=4, "33"=5);
+city4 ~ discrete_qualitative("41"=6, "42"=4, "43"=5);
+marginalize(city0);
+
+
+show_circuit();
+
+
+return (city0 == "03");
