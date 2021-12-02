@@ -35,16 +35,55 @@ Additonally, Guillemot allows commands to marginalize expressions (including var
         * Pareto
         * Uniform
 
+4. Show circuit
 
 
 
 
 ## Setup
 
+Guillemot can be used directly after cloning this directory via:
+
+```bash
+git clone https://github.com/noderod/Guillemot.git
+```
+
+Enter the directory:
+
+```bash
+cd Guillemot/
+```
+
+If not already installed, the following python3 libraries are required:
+* matplotlib
+* networkx
+* numpy
+* scipy
+
+
+These may be installed via (may require *sudo* access):
+```bash
+pip3 install matplotlib networkx numpy scipy
+```
+
 
 
 
 ## Usage
+
+
+Run Guillemot on a *.glmt* file (use the *-T* flag after the filename to show the time in miliseconds):
+```bash
+alias guillemot="python3 main.py"
+
+# Exact inference (direct search)
+guillemot enumerate benchmarks/truck_engine.glmt
+
+# Approximate inference (random sampling)
+guillemot rejection benchmarks/truck_engine.glmt
+```
+
+
 
 
 ## Examples
