@@ -39,7 +39,3 @@
 36. [https://towardsdatascience.com/generating-pareto-distribution-in-python-2c2f77f70dbf](https://towardsdatascience.com/generating-pareto-distribution-in-python-2c2f77f70dbf)
 37. [https://www.geeksforgeeks.org/binary-search-bisect-in-python/](https://www.geeksforgeeks.org/binary-search-bisect-in-python/)
 38. Using *MarcH*'s answer on [https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python](https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python).
-39. [https://networkx.org/documentation/stable/reference/introduction.html](https://networkx.org/documentation/stable/reference/introduction.html)
-40. [https://networkx.org/documentation/stable/reference/generated/networkx.drawing.nx_pylab.draw_networkx.html](https://networkx.org/documentation/stable/reference/generated/networkx.drawing.nx_pylab.draw_networkx.html)
-41. [https://networkx.org/documentation/latest/auto_examples/basic/plot_properties.html#sphx-glr-auto-examples-basic-plot-properties-py](https://networkx.org/documentation/latest/auto_examples/basic/plot_properties.html#sphx-glr-auto-examples-basic-plot-properties-py)
-42. [https://networkx.org/documentation/stable/reference/generated/networkx.drawing.layout.planar_layout.html](https://networkx.org/documentation/stable/reference/generated/networkx.drawing.layout.planar_layout.html)

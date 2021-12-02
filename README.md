@@ -63,7 +63,7 @@ If not already installed, the following python3 libraries are required:
 
 These may be installed via (may require *sudo* access):
 ```bash
-pip3 install matplotlib networkx numpy scipy
+pip3 install matplotlib numpy scipy
 ```
 
 

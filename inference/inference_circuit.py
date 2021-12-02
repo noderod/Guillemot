@@ -9,7 +9,7 @@ from copy import deepcopy
 from uuid import uuid4
 
 import matplotlib.pyplot as plt
-import networkx as nx
+import numpy as np
 
 from .aux_inference import add_to_stack, Simple_Stack, select_random_by_weight
 from .sentence_evaluation import logical_evaluator
@@ -461,10 +461,6 @@ class Circuit(object):
                 # Gets the ground node
                 ground_node = available_parent_nodes[0].obtain_circuit_top()
 
-                # Empty directed graph
-                # Based on https://networkx.org/documentation/stable/reference/introduction.html
-                complete_circuit_digraph = nx.DiGraph()
-
                 # Each node is assigned a number
                 # [[Circuit node, assigned number]]
                 next_number = 0
@@ -475,10 +471,17 @@ class Circuit(object):
                 # {"Node ID":node number (int), ...}
                 seen_nodes = {ground_node.node_ID:next_number}
 
+                # Keeps track of the nodes being joined together per step
+                # [[[origin node number, next node number], ...], ...]
+                node_conections = []
+
                 while origin_node_pairs != []:
 
                     # Resets the next pairs of nodes to be explored
                     next_node_pairs = []
+
+                    # Creates a new set of connections at the current step
+                    step_connections = []
 
                     for an_original_node_pair in origin_node_pairs:
 
@@ -495,18 +498,14 @@ class Circuit(object):
                                 next_number = seen_nodes[next_circuit_node_ID]
                             else:
                                 # Assigns a new number
-                                next_number = maximum_possible_number
                                 maximum_possible_number += 1
+                                next_number = maximum_possible_number
 
                                 # Adds the node as seen
                                 seen_nodes[next_circuit_node_ID] = next_number
 
-
-                            # Adds one to the number to be used by the next node
-                            next_number += 1
-
                             # Adds the edge to the graph
-                            complete_circuit_digraph.add_edge(original_number, next_number)
+                            step_connections.append([original_number, next_number])
 
                             # Adds the node as a next node to consider
                             next_node_pairs.append([next_circuit_node, next_number])
@@ -514,12 +513,82 @@ class Circuit(object):
                     # Replaces the old by the new
                     origin_node_pairs = next_node_pairs
 
-                # Draws the graph
-                # Based on
-                # https://networkx.org/documentation/stable/reference/generated/networkx.drawing.nx_pylab.draw_networkx.html
-                # https://networkx.org/documentation/latest/auto_examples/basic/plot_properties.html#sphx-glr-auto-examples-basic-plot-properties-py
-                # https://networkx.org/documentation/stable/reference/generated/networkx.drawing.layout.planar_layout.html
-                nx.draw(complete_circuit_digraph, pos=nx.planar_layout(complete_circuit_digraph), arrows=True, with_labels=False, node_size=1)
+                    # Adds the step connections to be considered
+                    node_conections.append(step_connections)
+
+
+                # Creates a figure to show the nodes
+                plt.figure()
+
+                # Finds the maximum width of the circuit
+                circuit_max_width = max(len(the_step_connections) for the_step_connections in node_conections)
+
+
+                # Plots the ground node
+                step_counter = 0
+                node_height_location = np.linspace(0, circuit_max_width, 3)[1]
+                ground_node_xy = [step_counter, node_height_location]
+
+                plt.plot([ground_node_xy[0]], [ground_node_xy[1]], "bo")
+
+
+                # keeps track of the node locations by node number
+                # {node number (int): [x, y]}
+                node_locations = {0:ground_node_xy}
+
+                for the_step_connections in node_conections:
+
+                    # Gets the current step number
+                    step_counter += 1
+
+                    # Gets the possible height numbers
+                    unique_end_nodes_per_level = set([z[1] for z in the_step_connections])
+
+                    possible_height_locations = np.linspace(0, circuit_max_width, 2 + len(unique_end_nodes_per_level))
+                    possible_height_locations = possible_height_locations[1:(len(possible_height_locations) -1)]
+
+                    unique_node_counter = -1
+
+                    # Goes through every possible node
+                    for nv in range(0, len(the_step_connections)):
+
+                        origin_node_ID, next_node_ID = the_step_connections[nv]
+
+                        # Gets the origin cordinates
+                        xo, yo = node_locations[origin_node_ID]
+
+                        # If the node was already known
+                        if next_node_ID in node_locations:
+                            xn, yn = node_locations[next_node_ID]
+                        # Otherwise, calculate these results
+                        else:
+
+                            # Get the current node ID
+                            unique_node_counter += 1
+
+                            # The x coordinate for the new node is always the step counter
+                            xn = step_counter
+
+                            # The y coordinate (height) monotonically increases from the starting point
+                            yn = possible_height_locations[unique_node_counter]
+
+                            # Store the results
+                            node_locations[next_node_ID] = [xn, yn]
+
+
+                        # Plots the new node
+                        plt.plot([xn], [yn], "bo")
+
+                        # Plots the connection between both
+                        plt.plot([xo, xn], [yo, yn], "k-")
+
+                        # Saves the new node coordinates
+                        node_locations[next_node_ID] = [xn, yn]
+
+
+                plt.xlabel("Program step")
+                plt.title("Program circuit")
+
                 plt.show()
 
                 # Save memory by deleting no longer useful items
