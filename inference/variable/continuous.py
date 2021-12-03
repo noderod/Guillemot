@@ -284,13 +284,9 @@ class normal_distribution(common_continuous):
     # σ (int/float): Standard deviation
     def __init__(self, given_variable_name, lower_bound, upper_bound, μ, σ):
 
-        # Standardizes variables
-        zl = z_standardizer(lower_bound, μ, σ)
-        zu = z_standardizer(upper_bound, μ, σ)
-
         # Distribution calculations completed using
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.norm.html
-        probability, E, Var = get_PR_E_Var(ab=get_integral_points(zl, zu), cdist=norm())
+        probability, E, Var = get_PR_E_Var(ab=get_integral_points(lower_bound, upper_bound), cdist=norm(loc=μ, scale=σ))
 
         common_continuous.__init__(self, given_variable_name, "Normal", ["μ", "σ"], [μ, σ],
             E, Var, lower_bound, upper_bound, probability)
