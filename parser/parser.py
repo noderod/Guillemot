@@ -19,19 +19,20 @@ SimPPL_parser = Lark(r"""
     e: NAME
     | ESCAPED_STRING
     | SIGNED_NUMBER
-    | and -> and_operation
-    | or  -> or_operation
-    | not -> not_operation
-    | "true" -> true
-    | "false" -> false
-    | expect -> expectation_operation
-    | var -> variance_operation
-    | equal_check -> equal_operation
-    | not_equal_check -> not_equal_operation
-    | less_check -> less_operation
-    | lt_check -> lt_operation
-    | greater_check -> greater_operation
-    | gt_check -> gt_operation
+    | and              -> and_operation
+    | or               -> or_operation
+    | not              -> not_operation
+    | "true"           -> true
+    | "false"          -> false
+    | expect           -> expectation_operation
+    | var              -> variance_operation
+    | equal_check      -> equal_operation
+    | not_equal_check  -> not_equal_operation
+    | less_check       -> less_operation
+    | lt_check         -> lt_operation
+    | greater_check    -> greater_operation
+    | gt_check         -> gt_operation
+    | arithmetic       -> arithmetic_operation
 
 
     and: ("(" "&&" e e ")"|"(" e "&&" e ")")
@@ -47,6 +48,21 @@ SimPPL_parser = Lark(r"""
     lt_check:         ("(" "<=" e e ")"|"(" e "<=" e ")")
     greater_check:    ("(" ">" e e ")"|"(" e ">" e ")")
     gt_check:         ("("" >=" e e ")"|"(" e ">=" e ")")
+
+    arithmetic: add
+    | substract
+    | opposite
+    | product
+    | division
+    | exponentiation
+
+
+    add:             ("(" "+" e e ")" | "(" e "+" e ")" )
+    substract:       ("(" "-" e e ")" | "(" e "-" e ")" )
+    opposite:        "(" "-" e ")"
+    product:         ("(" "*" e e ")" | "(" e "*" e ")" )
+    division:        ("(" "/" e e ")" | "(" e "/" e ")" )
+    exponentiation:  ("(" "**" e e ")" | "(" e "**" e ")" )
 
 
 

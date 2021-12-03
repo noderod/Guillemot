@@ -5,10 +5,13 @@ Continuous variables.
 """
 
 
-from .common import Common
+import random
 
 import numpy as np
 from scipy.stats import beta, norm, pareto, uniform
+
+from .common import Common, num_inner_points
+
 
 
 integral_resolution = 20 # intervals
@@ -275,6 +278,25 @@ class uniform_distribution(common_continuous):
         common_continuous.__init__(self, given_variable_name, "Uniform", ["a", "b"], [a, b],
             E, Var, lower_bound, upper_bound, probability)
 
+        # Stores distribution parameters
+        self.a = a
+        self.b = b
+
+
+    # Obtains a series of inner points
+    def calculate_inner_points(self):
+
+        # If the current interval is not within bounds, select points at random
+        if not (check_within_interval(self.lower_bound, a, b, contains=True) or check_within_interval(self.upper_bound, a, b, contains=True)):
+            return [random.uniform(self.lower_bound, self.upper_bound) for _ in range(0, num_inner_points)]
+        # Otherwise, select points within the overlapped range and return them
+        else:
+            considered_range = get_overlapped_range_p_dist([self.lower_bound, self.upper_bound], [a, b])
+
+        r_lower, r_upper = considered_range
+
+        return [random.uniform(r_lower, r_upper) for an_inner_point in range(0, num_inner_points)]
+
 
 
 # Normal (Gaussian) distributions
@@ -291,6 +313,15 @@ class normal_distribution(common_continuous):
         common_continuous.__init__(self, given_variable_name, "Normal", ["μ", "σ"], [μ, σ],
             E, Var, lower_bound, upper_bound, probability)
 
+        # Stores distribution parameters
+        self.μ = μ
+        self.σ = σ
+
+
+    # Obtains a series of inner points
+    def calculate_inner_points(self):
+        return inner_points_within_range(norm(loc=self.μ, scale=self.σ), [self.lower_bound, self.upper_bound])
+
 
 
 # Beta distributions
@@ -306,6 +337,25 @@ class beta_distribution(common_continuous):
 
         common_continuous.__init__(self, given_variable_name, "Beta", ["α", "β"], [α, β],
             E, Var, lower_bound, upper_bound, probability)
+
+        # Stores distribution parameters
+        self.α = α
+        self.β = β
+
+
+    # Obtains a series of inner points
+    def calculate_inner_points(self):
+
+        # If the current interval is not within bounds, select points at random
+        if not (check_within_interval(self.lower_bound, 0, 1, contains=True) or check_within_interval(self.upper_bound, 0, 1, contains=True)):
+            return [random.uniform(self.lower_bound, self.upper_bound) for _ in range(0, num_inner_points)]
+        # Otherwise, select points within the overlapped range and return them
+        else:
+            considered_range = get_overlapped_range_p_dist([self.lower_bound, self.upper_bound], [0, 1])
+
+        r_lower, r_upper = considered_range
+
+        return inner_points_within_range(beta(self.α, self.β), [self.lower_bound, self.upper_bound])
 
 
 
@@ -330,12 +380,24 @@ class pareto_distribution(common_continuous):
         common_continuous.__init__(self, given_variable_name, "Pareto", ["x_m", "α"], [x_m, α],
             E, Var, lower_bound, upper_bound, probability)
 
+        # Stores distribution parameters
+        self.x_m = x_m
+        self.α   = α
 
 
-# calculates the z standardization
-# z = (x - μ)/σ
-def z_standardizer(x, μ, σ):
-    return (x - μ)/σ
+    # Obtains a series of inner points
+    def calculate_inner_points(self):
+
+        # If the current interval is not within bounds, select points at random
+        if self.upper_bound < self.x_m:
+            return [random.uniform(self.lower_bound, self.upper_bound) for _ in range(0, num_inner_points)]
+        # Otherwise, select points within the overlapped range and return them
+        else:
+            considered_range = get_overlapped_range_p_dist([self.lower_bound, self.upper_bound], [x_m, np.inf])
+
+        r_lower, r_upper = considered_range
+
+        return inner_points_within_range(pareto(α, scale=x_m), [self.lower_bound, self.upper_bound])
 
 
 
@@ -435,3 +497,96 @@ def enforce_array_within_lu(given_array, l, u):
 def obtain_p_sv(given_hp, num_p):
     return [given_hp[:num_p], sorted(given_hp[num_p:])]
 
+
+
+# Finds the overlapped interval between two ranges (R1, R2) (an overlap is assumed)
+# R1 = [a (int | float), b (int | float)]: Range searched
+# R2 = [a (int | float), b (int | float)]: Distribution range
+# a <= b
+def get_overlapped_range_p_dist(R1, R2):
+
+    # Finds the smallest overlap
+    if (R1[1] - R1[0]) > (R2[1] - R2[0]):
+        L = R1 # Small range
+        S = R2 # Large range
+    else:
+        L = R2
+        S = R1
+
+    a_R1, b_R1 = R1
+    a_R2, b_R2 = R2
+
+    # An overlap is assumed, the following configurations are possible (searched range as "-", distribution range as "+")
+    if a_R1 < a_R2:
+
+        # -------------
+        #    +++++++++++++++++
+        if b_R1 < b_R2:
+            return [a_R2, b_R1]
+
+        # -----------------------
+        #    +++++++++++++++++
+        else:
+            return [a_R2, b_R2]
+
+    else:
+
+        #      -------------
+        #    +++++++++++++++++
+        if b_R1 < b_R2:
+            return [a_R1, b_R1]
+
+        #      ------------------
+        #    +++++++++++++++++
+        else:
+            return [a_R1, b_R2]
+
+
+# Obtains a series of inner points given a distribution and the range to search
+# Assumed that points may occur anywhere within the distribution
+# R = [a (int | float), b (int | float)]
+def inner_points_within_range(cdist, R):
+
+    # Gets the x, y range of valid points (Monte Carlo)
+    x1, x2 = R
+    y1, y2 = 0, max(cdist.pdf(x1), cdist.pdf(x2))
+
+
+    # Keeps obtaining points until it finishes
+    valid_points_so_far = 0
+    P = []
+    while valid_points_so_far < num_inner_points:
+
+        xn = random.uniform(x1, x2)
+        yn = random.uniform(y1, y2)
+
+        if yn <= cdist.pdf(xn):
+            P.append(xn)
+            valid_points_so_far += 1
+
+    return P
+
+
+    # Obtains a series of inner points
+    def calculate_inner_points(self):
+
+        cdist=norm(loc=self.μ, scale=self.σ)
+
+        # Gets the x, y range of valid points (Monte Carlo)
+        x1, x2 = self.lower_bound, self.upper_bound
+        y1, y2 = 0, max(cdist.pdf(x1), cdist.pdf(x2))
+
+
+        # Keeps obtaining points until it finishes
+        valid_points_so_far = 0
+        P = []
+        while valid_points_so_far < num_inner_points:
+
+            xn = random.uniform(x1, x2)
+            yn = random.uniform(y1, y2)
+
+            if yn <= cdist.pdf(xn):
+                P.append(xn)
+                valid_points_so_far += 1
+
+        return P

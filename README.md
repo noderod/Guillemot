@@ -1,5 +1,5 @@
 # Summary
-**Guillemot** is a probabilistic programming language designed for binary, discrete, and discretized continuous distributions (continuous distributions are not supported). It supports both exact (search) and approximate (random sampling) inference.
+**Guillemot** is a probabilistic programming language designed for binary, discrete, and discretized continuous distributions (continuous distributions are not supported). It supports both exact (direct search) (except when including multiplication, division, or exponentiation) and approximate (random sampling) inference.
 
 Additonally, Guillemot allows commands to marginalize expressions (including variables) or eliminate certain remaining variables, improving program runtime.
 
@@ -20,11 +20,19 @@ Additonally, Guillemot allows commands to marginalize expressions (including var
     * Greater than (>)
     * Greater than or equal (>=)
 
-2. Variable calculation operations:
+2. Arithmetic operations:
+    * Addition (A + B)
+    * Substraction (A - B)
+    * Multiplication (A \* B)
+    * Division (A / B)
+    * Exponentiation (A \*\* B)
+    * Opposite (- A)
+
+3. Variable calculation operations:
     * Expectation
     * Variance
 
-3. Variable types supported:
+4. Variable types supported:
     * Binary (implemented internally as a discrete numeric)
     * Discrete:
         * Numeric: Each state must be a number, either an integer or a float
@@ -35,7 +43,7 @@ Additonally, Guillemot allows commands to marginalize expressions (including var
         * Pareto
         * Uniform
 
-4. Show circuit
+5. Show circuit
 
 
 

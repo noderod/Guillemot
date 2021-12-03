@@ -6,6 +6,7 @@ Implements an inference circuit and associated elements.
 
 
 from copy import deepcopy
+import random
 from uuid import uuid4
 
 import matplotlib.pyplot as plt
@@ -39,6 +40,10 @@ parsnumcon_to_con = {
     "d_pareto_num":"pareto",
     "d_beta_num":"beta"
 }
+
+
+# Sets a seed for repeatabaility
+random.seed(0)
 
 
 

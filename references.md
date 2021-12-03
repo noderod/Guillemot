@@ -39,3 +39,5 @@
 36. [https://towardsdatascience.com/generating-pareto-distribution-in-python-2c2f77f70dbf](https://towardsdatascience.com/generating-pareto-distribution-in-python-2c2f77f70dbf)
 37. [https://www.geeksforgeeks.org/binary-search-bisect-in-python/](https://www.geeksforgeeks.org/binary-search-bisect-in-python/)
 38. Using *MarcH*'s answer on [https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python](https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python).
+39. [https://en.wikipedia.org/wiki/Variance#Discrete_random_variable](https://en.wikipedia.org/wiki/Variance#Discrete_random_variable)
+40. [https://docs.python.org/3/library/random.html](https://docs.python.org/3/library/random.html)

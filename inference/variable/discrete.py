@@ -60,6 +60,10 @@ class Discrete_Qualitative(Common):
 
         Common.__init__(self, given_variable_name, "discrete qualitative", given_expectation, 0, given_expectation, given_expectation, given_probability)
 
+    # The inner points are always its value
+    def calculate_inner_points(self):
+        return [given_expectation for an_inner_point in range(0, num_inner_points)]
+
 
 
 # Discrete numeric
@@ -73,3 +77,7 @@ class Discrete_Numeric(Common):
         assert given_expectation_type != "str", "Discrete numeric variables must not be of type 'str'"
 
         Common.__init__(self, given_variable_name, "numeric qualitative", given_expectation, 0, given_expectation, given_expectation, given_probability)
+
+    # The inner points are always its value
+    def calculate_inner_points(self):
+        return [given_expectation for an_inner_point in range(0, num_inner_points)]

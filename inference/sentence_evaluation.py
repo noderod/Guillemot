@@ -202,6 +202,11 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
         operation_logical_value = first_evaluated >= second_evaluated
 
 
+    # Arithmetic operations are handled differently
+    elif operation_name == "arithmetic_operation":
+        operation_logical_value = execute_arithmetic_operation(tree_to_be_considered.children[0].children[0], environment_dict)
+
+
 
     # If requesting a value, return the expectation (value, not a variable object)
     if numeric_final_result:
@@ -214,6 +219,30 @@ def logical_evaluator(tree_to_be_considered, environment_dict, final_result=True
     else:
         return operation_logical_value
 
+
+
+# Handles arithmetic operations
+def execute_arithmetic_operation(subtree, environment_dict):
+
+    operation_executed = subtree.data
+
+    # Gets the variables to consider in the operation
+    variables_to_consider = [logical_evaluator(another_subtree, environment_dict, final_result=False, numeric_final_result=False)
+                            for another_subtree in subtree.children]
+
+    # Executes the operation
+    if operation_executed == "add":
+        return variables_to_consider[0] + variables_to_consider[1]
+    elif operation_executed == "substract":
+        return variables_to_consider[0] - variables_to_consider[1]
+    elif operation_executed == "opposite":
+        return variables_to_consider[0].opposite()
+    elif operation_executed == "product":
+        return variables_to_consider[0] * variables_to_consider[1]
+    elif operation_executed == "division":
+        return variables_to_consider[0] / variables_to_consider[1]
+    elif operation_executed == "exponentiation":
+        return variables_to_consider[0] ** variables_to_consider[1]
 
 
 
