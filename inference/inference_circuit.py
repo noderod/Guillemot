@@ -15,7 +15,7 @@ from .aux_inference import add_to_stack, Simple_Stack, select_random_by_weight
 from .sentence_evaluation import logical_evaluator
 from .variable.common import generate_true_fixed_var
 from .variable.discrete import discrete_creator, generate_bernoulli
-from .variable.continuous import generate_discretized_continuous_distribution
+from .variable.continuous import generate_discretized_continuous_distribution, generate_discretized_continuous_distribution_from_n
 from .variable.logical_variables import logical_value
 
 
@@ -31,6 +31,13 @@ parscon_to_con = {
     "d_gaussian":"normal",
     "d_pareto":"pareto",
     "d_beta":"beta"
+}
+
+parsnumcon_to_con = {
+    "d_uniform_num":"uniform",
+    "d_gaussian_num":"normal",
+    "d_pareto_num":"pareto",
+    "d_beta_num":"beta"
 }
 
 
@@ -432,6 +439,37 @@ class Circuit(object):
 
 
                 available_parent_nodes = future_parent_nodes
+
+
+
+            # Continuous variables (where intervals are defined as an a number of intervals rather than direct splitting locations)
+            elif data_from_tree in parsnumcon_to_con:
+
+                distribution_name = parsnumcon_to_con[data_from_tree]
+
+                variable_name = present_tree.children[0].value
+
+                # Gets the number of discrete value assignments
+                num_hyperparameters = len(present_tree.children) - 1
+
+                for a_parent_node in available_parent_nodes:
+
+                    environment_parent = a_parent_node.obtain_chain_environment_vars_only()
+
+                    # Keeps track of the discrete values and their odds
+                    assigned_hyperparameters = []
+
+                    for an_hp in range(0, num_hyperparameters):
+                        hp_tree = present_tree.children[1 + an_hp]
+                        assigned_hyperparameters.append(logical_evaluator(hp_tree, environment_parent, final_result=False, numeric_final_result=True))
+
+                    # Creates the discrete variable
+                    generated_variables = generate_discretized_continuous_distribution_from_n(variable_name, distribution_name, assigned_hyperparameters)
+                    future_parent_nodes += [Circuit_node_variable(variable_name, a_parent_node, a_var) for a_var in generated_variables]
+
+
+                available_parent_nodes = future_parent_nodes
+
 
 
 

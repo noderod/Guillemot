@@ -68,6 +68,10 @@ SimPPL_parser = Lark(r"""
     | d_gaussian
     | d_pareto
     | d_beta
+    | d_uniform_num
+    | d_gaussian_num
+    | d_pareto_num
+    | d_beta_num
     | show_circuit
 
 
@@ -87,14 +91,20 @@ SimPPL_parser = Lark(r"""
     print: "print" "(" e ")"
 
 
-    bern: NAME ("∼"|"~") "bernoulli" "(" e ")"
-    disc_num: NAME ("∼"|"~") "discrete_numeric" "(" e "=" e ["," e "=" e ]* ")"
+    bern:      NAME ("∼"|"~") "bernoulli" "(" e ")"
+    disc_num:  NAME ("∼"|"~") "discrete_numeric" "(" e "=" e ["," e "=" e ]* ")"
     disc_qual: NAME ("∼"|"~") "discrete_qualitative" "(" e "=" e ["," e "=" e ]* ")"
 
-    d_uniform: NAME ("∼"|"~") "uniform" "(" "a" "=" e "," "b" "=" e ["," e ]* ")"
+    d_uniform:  NAME ("∼"|"~") "uniform" "(" "a" "=" e "," "b" "=" e ["," e ]* ")"
     d_gaussian: NAME ("∼"|"~") ("gaussian"|"normal") "(" ("μ"|"mu") "=" e "," ("σ"|"sigma") "=" e ["," e ]* ")"
-    d_pareto: NAME ("∼"|"~") "pareto" "(" "x_m" "=" e "," ("α"|"alpha") "=" e ["," e ]* ")"
-    d_beta: NAME ("∼"|"~") "beta" "(" ("α"|"alpha") "=" e "," ("β"|"beta") "=" e ["," e ]* ")"
+    d_pareto:   NAME ("∼"|"~") "pareto" "(" "x_m" "=" e "," ("α"|"alpha") "=" e ["," e ]* ")"
+    d_beta:     NAME ("∼"|"~") "beta" "(" ("α"|"alpha") "=" e "," ("β"|"beta") "=" e ["," e ]* ")"
+
+    d_uniform_num:  NAME ("∼"|"~") "uniform" "(" "a" "=" e "," "b" "=" e "," "n" "=" e ")"
+    d_gaussian_num: NAME ("∼"|"~") ("gaussian"|"normal") "(" ("μ"|"mu") "=" e "," ("σ"|"sigma") "=" e "," "n" "=" e ")"
+    d_pareto_num:   NAME ("∼"|"~") "pareto" "(" "x_m" "=" e "," ("α"|"alpha") "=" e "," "n" "=" e ")"
+    d_beta_num:     NAME ("∼"|"~") "beta" "(" ("α"|"alpha") "=" e "," ("β"|"beta") "=" e "," "n" "=" e ")"
+
 
     show_circuit: "show_circuit" "(" ")"
 

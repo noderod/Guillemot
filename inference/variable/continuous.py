@@ -136,6 +136,103 @@ def generate_discretized_continuous_distribution(given_variable_name, distributi
 
 
 
+# Creates a number of continuous distributions ranges given a number of splitting locations
+# distribution_hp [(float), ...]: Distribution hyperparameters, refers to both distribution parameters (such as the mean) and interval separation points
+def generate_discretized_continuous_distribution_from_n(given_variable_name, distribution_name, distribution_hp):
+
+    # enforces known distribution
+    assert distribution_name in ["uniform", "normal", "beta", "pareto"], "'%s' distribution is not accepted" % (distribution_name, )
+
+    # Enforces all parameters to be numeric
+    for a_param in distribution_hp:
+        param_type = type(a_param).__name__
+        assert (param_type == "int") or (param_type == "float"), "All parameters, must be int or float type, not '%s'" % (param_type, )
+
+
+    # Gets the number of blocks (always the last element) as integer
+    num_blocks = int(distribution_hp[-1])
+
+    # Enforces it to be larger than zero
+    assert num_blocks > 0, "The number of blocks must be rounded to be larger than zero, it currently is %f" % (distribution_hp[-1], )
+
+    # The number of separating points is always 1 larger than the number of blocks
+    num_separating_points = 1 + num_blocks
+
+    # Gets the distribution pareameters, which are the remaining hyperparameters
+    distribution_parameter_values = distribution_hp[:(len(distribution_hp) - 1)]
+
+
+    # Generates the different distributions
+    if distribution_name == "uniform":
+
+        a, b = distribution_parameter_values
+
+        # Adds the points to the range as the start and end
+        ordered_separating_points = np.linspace(a, b, num_separating_points)
+
+        created_distributions = []
+
+        for wa in range(0, (len(ordered_separating_points) - 1)):
+            l = ordered_separating_points[wa]
+            u = ordered_separating_points[wa + 1]
+
+            created_distributions.append(uniform_distribution(given_variable_name, l, u, a, b))
+
+    elif distribution_name == "normal":
+
+        μ, σ = distribution_parameter_values
+
+        five_sigma = 5*σ
+
+        ordered_separating_points = np.linspace(μ - five_sigma, μ + five_sigma, num_separating_points)
+
+        created_distributions = []
+
+        for wa in range(0, (len(ordered_separating_points) - 1)):
+            l = ordered_separating_points[wa]
+            u = ordered_separating_points[wa + 1]
+
+            created_distributions.append(normal_distribution(given_variable_name, l, u, μ, σ))
+
+
+    # Generates the different distributions
+    elif distribution_name == "beta":
+
+        α, β = distribution_parameter_values
+        # Beta distribution is always within the [0, 1] interval
+        ordered_separating_points = np.linspace(0, 1, num_separating_points)
+
+        created_distributions = []
+
+        for wa in range(0, (len(ordered_separating_points) - 1)):
+            l = ordered_separating_points[wa]
+            u = ordered_separating_points[wa + 1]
+
+            created_distributions.append(beta_distribution(given_variable_name, l, u, α, β))
+
+
+    # Generates the different distributions
+    elif distribution_name == "pareto":
+
+        x_m, α = distribution_parameter_values
+
+        # End point asssigned as the place where CDF >= 0.999999 (close to the 5*σ for the normal distribution)
+        end_point = x_m/(0.000001**(1/α))
+        ordered_separating_points = np.linspace(x_m, end_point, num_separating_points)
+
+        created_distributions = []
+
+        for wa in range(0, (len(ordered_separating_points) - 1)):
+            l = ordered_separating_points[wa]
+            u = ordered_separating_points[wa + 1]
+
+            created_distributions.append(pareto_distribution(given_variable_name, l, u, x_m, α))
+
+    return created_distributions
+
+
+
+
 # Common continuous function
 # Designed as an abstract class to automatically describe the variable in an unified format
 class common_continuous(Common):
