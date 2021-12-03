@@ -1,0 +1,18 @@
+// SUMMARY
+//
+// Solves Hooke's law problem (https://en.wikipedia.org/wiki/Hooke%27s_law), attempting to find the probability of the force being in a certain interval
+
+// Measured spring displacement
+// 1000 divisions
+// N.B. Guillemot will only consider a 10σ wide interval (5σ from the mean in both directions)
+x ~ gaussian(μ=0.20, σ=0.01, n=1000); // (m)
+
+// Sping constant
+k = 200; // (Kg/(s**2))
+
+// Output forced exerted on the spring
+F = (k*x); // N
+
+
+// Checks the probability of the exerted force being in a given tolerance interval
+return ((38 <= F) && (F <= 42));
