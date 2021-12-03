@@ -684,7 +684,7 @@ class Circuit(object):
 
 
 
-    # Obtains the rejection (direct search) probability
+    # Obtains the rejection (random sampling) probability
     # Prints the final results
     def infer_by_rejection(self, num_samples=5000):
 
@@ -711,7 +711,7 @@ class Circuit(object):
 
 
 
-    # Obtains the enumeration (search) probability
+    # Obtains the enumeration (direct search) probability
     # Goes up from the lowest nodes until the top recording the probabilities
     # Prints the final results
     def infer_by_enumeration(self):
@@ -844,7 +844,26 @@ class Circuit_node(object):
 
         recursive_environment = deepcopy(environment_so_far)
 
-        # Updates the environment with the current variable
+        # Ignores observation nodes
+        if not self.observation_node:
+
+            # In the case of compressed nodes, retreive all values unless already seen
+            if self.compressed_node:
+
+                for a_var_name in self.compressed_environment:
+
+                    if a_var_name not in recursive_environment:
+                        recursive_environment[a_var_name] = self.compressed_environment[a_var_name]
+            # Normal nodes
+            else:
+                # Stores using variable name, not the circuit token
+                var_val = self.variable_value
+
+                if var_val.variable_name not in recursive_environment:
+                    recursive_environment[var_val.variable_name] = [var_val, self.current_probability]
+
+
+        """# Updates the environment with the current variable
         # If the variable is already in the environment, do not update
         # This corresponds to leaving the last updated variable value
         if (self.token not in environment_so_far):
@@ -855,11 +874,10 @@ class Circuit_node(object):
             # Compressed nodes, retrieve all values from their environment
             elif self.compressed_node:
                 for a_var_token in self.compressed_environment:
-                    recursive_environment[a_var_token] = self.compressed_environment[a_var_token]
+                    recursive_environment[a_var_token] = self.compressed_environment[a_var_token]"""
 
 
         if self.parents == [None]:
-            #print(environment_so_far)
             return environment_so_far
         else:
             return self.parents[0].obtain_chain_environment(recursive_environment)
@@ -932,6 +950,9 @@ class Circuit_node_variable(Circuit_node):
 
         # Enforces the token being different from "OBSERVATION"
         assert token not in  ["OBSERVATION", "MARG", "ELIM", "DEADEND"], "Token cannot be '%s', reserved name" % (token, )
+
+        # Changes the name of the variable to be the same as the token
+        variable_value.variable_name = token
 
         Circuit_node.__init__(self, token, observation_node=False, parents=[parent], variable_value=variable_value,
             current_probability=variable_value.probability, observation_tree=None, compressed_node=False,  compressed_environment=None,

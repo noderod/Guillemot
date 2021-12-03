@@ -6,8 +6,8 @@ Additonally, Guillemot allows commands to marginalize expressions (including var
 
 ## Assumptions
 
-1. Properly formatted Guillemot program as input
-2. A *return* statement must occur within the program, but one or more *observation* statements are not required.
+1. Properly formatted Guillemot program as input.
+2. A *return* statement must occur within the program.
 
 
 ## Supported operations
@@ -64,7 +64,6 @@ cd Guillemot/
 
 If not already installed, the following python3 libraries are required:
 * matplotlib
-* networkx
 * numpy
 * scipy
 
