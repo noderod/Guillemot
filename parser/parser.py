@@ -77,6 +77,7 @@ SimPPL_parser = Lark(r"""
     | marg
     | elimvar
     | print
+    | print_combined
     | bern
     | disc_num
     | disc_qual
@@ -104,7 +105,8 @@ SimPPL_parser = Lark(r"""
     marg: "marginalize" "(" e ["," e ]* ")"
     elimvar: "eliminate_variable" "(" NAME ["," NAME ]* ")"
 
-    print: "print" "(" e ")"
+    print:          "print" "(" e ")"
+    print_combined: "print_combined" "(" e ")"
 
 
     bern:      NAME ("∼"|"~") "bernoulli" "(" e ")"
@@ -123,6 +125,7 @@ SimPPL_parser = Lark(r"""
 
 
     show_circuit: "show_circuit" "(" ")"
+
 
 
 

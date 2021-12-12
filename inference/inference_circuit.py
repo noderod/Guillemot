@@ -248,7 +248,7 @@ class Circuit(object):
 
                 for a_parent_node in available_parent_nodes:
 
-                    print("-> Leaf node %d:" % node_counter)
+                    print("-> Leaf node %d:" % (node_counter, ))
 
                     environment_parent = a_parent_node.obtain_chain_environment_vars_only()
                     tmp_var = logical_evaluator(expression_to_be_shown, environment_parent, final_result=False, numeric_final_result=False)
@@ -257,6 +257,42 @@ class Circuit(object):
 
 
                     node_counter += 1
+
+
+
+            # Prints the result of an expression combining all nodes where it shares the same result
+            elif data_from_tree == "print_combined":
+
+                node_counter = 0
+                expression_to_be_shown = present_tree.children[0]
+
+                # {"Expresion value":[Node number (int), ...], ...}
+                nodes_with_same_value = {}
+
+                for a_parent_node in available_parent_nodes:
+
+                    environment_parent = a_parent_node.obtain_chain_environment_vars_only()
+                    tmp_var = logical_evaluator(expression_to_be_shown, environment_parent, final_result=False, numeric_final_result=False)
+
+                    variable_contents_str = str(tmp_var)
+
+                    if variable_contents_str in nodes_with_same_value:
+                        nodes_with_same_value[variable_contents_str].append(node_counter)
+                    else:
+                        nodes_with_same_value[variable_contents_str] = [node_counter]
+
+                    node_counter += 1
+
+                # Prints variables with the same value as well as the ones where this occurs
+                for a_var_value in nodes_with_same_value:
+
+                    found_nodes_as_str = [str(a_node) for a_node in nodes_with_same_value[a_var_value]]
+                    print("-> Leaf nodes %s:" % (", ".join(found_nodes_as_str), ))
+                    print("    " + a_var_value)
+
+
+                # Saves memory
+                del nodes_with_same_value
 
 
 
