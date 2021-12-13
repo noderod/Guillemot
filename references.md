@@ -42,3 +42,4 @@
 39. [https://en.wikipedia.org/wiki/Variance#Discrete_random_variable](https://en.wikipedia.org/wiki/Variance#Discrete_random_variable)
 40. [https://docs.python.org/3/library/random.html](https://docs.python.org/3/library/random.html)
 41. [https://en.wikipedia.org/wiki/Weighted_least_squares](https://en.wikipedia.org/wiki/Weighted_least_squares)
+42. Using *Kev* and *captainclam*'s answer from [https://stackoverflow.com/questions/14494747/how-to-add-images-to-readme-md-on-github](https://stackoverflow.com/questions/14494747/how-to-add-images-to-readme-md-on-github)

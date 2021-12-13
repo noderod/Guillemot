@@ -550,7 +550,16 @@ def inner_points_within_range(cdist, R):
 
     # Gets the x, y range of valid points (Monte Carlo)
     x1, x2 = R
-    y1, y2 = 0, max(cdist.pdf(x1), cdist.pdf(x2))
+
+    y1 = 0
+
+    # The max y is selected as the maximum psd obtained among a group of points
+    y2 = -1 # Placeholder
+
+    x_to_select_from = np.linspace(x1, x2, num_inner_points)
+
+    for an_x in x_to_select_from:
+        y2 = max(y2, cdist.pdf(an_x))
 
 
     # Keeps obtaining points until it finishes
