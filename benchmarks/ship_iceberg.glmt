@@ -1,0 +1,40 @@
+// SUMMARY
+//
+// Predicts the probability of a ship crashing into an iceberg if maintaininbg its current course
+// Not real data
+
+
+// Ship speed (knots)
+v_x = 10;
+v_y = 5;
+
+// Time spent traveling (h)
+t = 2;
+
+
+// Ship coordinates (nautical miles)
+ship_x_o ~ gaussian(μ=20, σ=0.1, n=9);
+ship_x = (ship_x_o + (t*v_x));
+ship_y_o ~ gaussian(μ=10, σ=0.1, n=9);
+ship_y = (ship_y_o + (t*v_y));
+
+// Iceberg coordinates (nautical miles)
+iceberg_x ~ gaussian(μ=40, σ=0.1, n=9);
+dx2 = ((iceberg_x - ship_x)**2);
+iceberg_y ~ gaussian(μ=20, σ=0.1, n=9);
+dy2 = ((iceberg_y - ship_y)**2);
+marginalize(dx2, dy2);
+
+// Euclidean distance
+distance = ((dx2 + dy2)**0.5);
+marginalize(distance);
+
+// Crash if the distance between the iceberg and the ship is equal to or below 0.2 nautical miles
+if (distance <= 0.2) {
+    crash_with_iceberg = true;
+} else {
+    crash_with_iceberg = false;
+};
+
+
+return crash_with_iceberg;
