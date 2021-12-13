@@ -3,6 +3,8 @@
 
 Additonally, Guillemot allows commands to marginalize expressions (including variables) or eliminate certain remaining variables, improving program runtime.
 
+![Guillemot logo](images/logo.png?raw=true)
+
 
 ## Assumptions
 
