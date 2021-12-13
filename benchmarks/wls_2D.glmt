@@ -1,0 +1,20 @@
+// SUMMARY
+//
+// Determines a weighted leeast quares regression over 2D points:
+// y = b + m*x
+// This method is only interested in showing the coefficients, so the return probability is not shown
+
+
+
+y1 ~ uniform(a=2, b=10, n=10);
+y2 ~ uniform(a=4, b=20, n=10);
+
+
+[b, m] = wls([1, 1, y1], [1, 2, y2]);
+
+
+print_combined(b);
+print_combined(m);
+
+
+return 1;

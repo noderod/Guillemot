@@ -14,7 +14,7 @@ import numpy as np
 
 from .aux_inference import add_to_stack, Simple_Stack, select_random_by_weight
 from .sentence_evaluation import logical_evaluator
-from .variable.common import generate_true_fixed_var
+from .variable.common import Common, generate_true_fixed_var
 from .variable.discrete import discrete_creator, generate_bernoulli
 from .variable.continuous import generate_discretized_continuous_distribution, generate_discretized_continuous_distribution_from_n
 from .variable.logical_variables import logical_value
@@ -524,7 +524,8 @@ class Circuit(object):
 
                     # Obtains the environment, tokens and variable values only
                     environment_parent = a_parent_node.obtain_chain_environment_vars_only()
-                    assigned_variable = logical_evaluator(operation_to_be_executed, environment_parent, final_result=False, numeric_final_result=False)
+                    assigned_variable = logical_evaluator(operation_to_be_executed, environment_parent,
+                                                            final_result=False, numeric_final_result=False)
 
                     # Adds node
                     future_parent_nodes += [Circuit_node_variable(token_name, a_parent_node, assigned_variable)]
@@ -673,6 +674,128 @@ class Circuit(object):
                 # Save memory by deleting no longer useful items
                 del seen_nodes, next_node_pairs, origin_node_pairs
 
+
+            # Weighted Least Squares Regression (WLS)
+            # Based on https://en.wikipedia.org/wiki/Weighted_least_squares
+            elif data_from_tree == "wlsr":
+
+                # Gathers the coefficient variable names
+                coef_names = [a_child.value for a_child in present_tree.children[0].children]
+                num_coef = len(coef_names)
+
+                datapoint_expressions = [a_child.children for a_child in present_tree.children[1:]]
+                num_datapoints = len(datapoint_expressions)
+                num_expressions_X = len(datapoint_expressions[0]) - 1
+
+                # Ensures that the length of all the datapoint inputs minus one (because the output y is included)
+                #   equals the number of coefficients
+                for an_expression in datapoint_expressions:
+                    assert (len(an_expression) - 1) == num_coef, "The number of datapoint inputs and coefficiens must be the same"
+
+                # Possible trace-input combinations
+                num_input_combinations = len(available_parent_nodes)*num_datapoints
+
+                # WLS matrices
+                X = np.zeros((num_input_combinations, num_coef))
+                W = np.zeros((num_input_combinations, num_input_combinations))
+                y = np.zeros((num_input_combinations, 1))
+
+                num_parent_nodes = len(available_parent_nodes)
+
+                # Stores the parent node environments
+                parent_envs = [a_parent_node.obtain_chain_environment_vars_only() for a_parent_node in available_parent_nodes]
+                # Stores the parent node probabilities
+                parent_Pr = [a_parent_node.obtain_chain_probability() for a_parent_node in available_parent_nodes]
+
+                # Row index for WLS matrices
+                row_index = -1
+
+                # Goes parent node by parent node first
+                for a_parent_index in range(0, num_parent_nodes):
+
+                    a_parent_node = available_parent_nodes[a_parent_index]
+                    a_parent_env = parent_envs[a_parent_index]
+
+                    # Associated cost equals the probability
+                    # Less probable traces penalize less
+                    cost = parent_Pr[a_parent_index]
+
+                    # Avoids a cost equal to zero
+                    cost = max(cost, 2**(-16))
+
+                    # Goes input vector by input vector
+                    for a_datapoint_expressions in datapoint_expressions:
+
+                        # Obtains the current row index
+                        row_index += 1
+
+                        # Keeps track of the obtained variables
+                        tmp_wls_vars = []
+
+                        # Goes expression by expression
+                        for an_expression in a_datapoint_expressions:
+                            tmp_wls_vars.append(logical_evaluator(an_expression, a_parent_env,
+                                final_result=False, numeric_final_result=False))
+
+                        # Computes the sum of variances
+                        var_sum = tmp_wls_vars[0]
+
+                        for a_tmp_var in tmp_wls_vars[1:]:
+                            var_sum += a_tmp_var
+
+                        var_sum_Var = var_sum.variance
+                        # Avoids zero variance
+                        var_sum_Var = max(var_sum_Var, 2**(-16))
+
+                        # Inserts the X, W contents
+                        for col_index in range(0, num_expressions_X):
+                            X[row_index][col_index] = tmp_wls_vars[col_index].expectation
+                            W[row_index][row_index] = (cost**2)/(var_sum_Var)
+
+                        # Inserts the y content
+                        y[row_index][0] = tmp_wls_vars[-1].expectation
+
+
+                # Calculate the coefficients
+                X_T = np.transpose(X)
+
+                # (X^T)WX
+                X_T__W__X = np.dot(np.dot(X_T, W), X)
+                # (X^T)Wy (1 D array form)
+                X__W__y = [a_y[0] for a_y in  np.dot(np.dot(X_T, W), y)]
+
+                β = np.linalg.solve(X_T__W__X, X__W__y)
+                found_coef_vars = []
+
+                for a_coef_index in range(0, num_coef):
+
+                    β_k = β[a_coef_index]
+                    a_coef_name = coef_names[a_coef_index]
+
+                    # Creates the corresponding coefficient variables
+                    # Unknown distribution since the inputs variables may not be normally distributed
+                    # Assumed discrete
+                    found_coef_vars.append(Common(variable_name=a_coef_name, variable_class="WLS", expectation=β_k,
+                                            variance=0, lower_bound=β_k, upper_bound=β_k, probability=1))
+
+                # Adds the found coefficient variables to the parent nodes
+                for a_parent_index in range(0, num_parent_nodes):
+
+                    # Node onto which the node is appended
+                    to_be_used_as_parent_node = available_parent_nodes[a_parent_index]
+
+                    for a_coef_index in range(0, num_coef):
+                        a_coef_var  = found_coef_vars[a_coef_index]
+                        a_coef_name = coef_names[a_coef_index]
+
+                        # Creates a new node that is to be used as the prant node moving forward
+                        to_be_used_as_parent_node = Circuit_node_variable(a_coef_name, to_be_used_as_parent_node, a_coef_var)
+
+
+                    # After adding all coefficients mark this node as the next parent node
+                    future_parent_nodes += [to_be_used_as_parent_node]
+
+                available_parent_nodes = future_parent_nodes
 
 
             # Otherwise, find the children trees and explore them
@@ -897,21 +1020,6 @@ class Circuit_node(object):
 
                 if var_val.variable_name not in recursive_environment:
                     recursive_environment[var_val.variable_name] = [var_val, self.current_probability]
-
-
-        """# Updates the environment with the current variable
-        # If the variable is already in the environment, do not update
-        # This corresponds to leaving the last updated variable value
-        if (self.token not in environment_so_far):
-
-            if (self.token != "OBSERVATION") and (not self.compressed_node):
-                recursive_environment[self.token] = [self.variable_value, self.current_probability]
-
-            # Compressed nodes, retrieve all values from their environment
-            elif self.compressed_node:
-                for a_var_token in self.compressed_environment:
-                    recursive_environment[a_var_token] = self.compressed_environment[a_var_token]"""
-
 
         if self.parents == [None]:
             return environment_so_far

@@ -41,3 +41,4 @@
 38. Using *MarcH*'s answer on [https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python](https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python).
 39. [https://en.wikipedia.org/wiki/Variance#Discrete_random_variable](https://en.wikipedia.org/wiki/Variance#Discrete_random_variable)
 40. [https://docs.python.org/3/library/random.html](https://docs.python.org/3/library/random.html)
+41. [https://en.wikipedia.org/wiki/Weighted_least_squares](https://en.wikipedia.org/wiki/Weighted_least_squares)

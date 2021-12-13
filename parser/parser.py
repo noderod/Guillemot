@@ -89,6 +89,7 @@ SimPPL_parser = Lark(r"""
     | d_gaussian_num
     | d_pareto_num
     | d_beta_num
+    | wlsr
     | show_circuit
 
 
@@ -126,6 +127,10 @@ SimPPL_parser = Lark(r"""
 
     show_circuit: "show_circuit" "(" ")"
 
+    wlsr: arr_var_name "=" "wls" "(" arr_regr ["," arr_regr]* ")"
+
+    arr_var_name: "[" NAME ["," NAME]* "]"
+    arr_regr:     "[" e ["," e]* "," e "]"
 
 
 
