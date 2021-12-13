@@ -54,6 +54,10 @@ Additonally, Guillemot allows commands to marginalize expressions (including var
 
 ## Setup
 
+Guillemot can be used directly from this directory or through Docker. Both are described below:
+
+1. **Direct setup**
+
 Guillemot can be used directly after cloning this directory via:
 
 ```bash
@@ -78,6 +82,29 @@ pip3 install matplotlib numpy scipy
 ```
 
 
+2. **Docker setup**
+
+Note: Docker images do not have GUI access, so the circuit cannot be shown. All other commands work as expected.
+
+Build image using Docker, this step may require sudo access:
+
+```bash
+docker build -t guillemot/guillemot:latest .
+```
+
+Enter the image (note, the container will be deleted after exiting), this step may require sudo access:
+```bash
+docker run -it --rm guillemot/guillemot:latest bash
+```
+
+Run a provided benchmark:
+```bash
+# Exact inference (direct search)
+guillemot enumerate benchmarks/truck_engine.glmt
+
+# Approximate inference (random sampling)
+guillemot rejection benchmarks/truck_engine.glmt
+```
 
 
 ## Usage
