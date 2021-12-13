@@ -287,11 +287,12 @@ class uniform_distribution(common_continuous):
     def calculate_inner_points(self):
 
         # If the current interval is not within bounds, select points at random
-        if not (check_within_interval(self.lower_bound, a, b, contains=True) or check_within_interval(self.upper_bound, a, b, contains=True)):
+        if not (check_within_interval(self.lower_bound, self.a, self.b, contains=True) or
+                check_within_interval(self.upper_bound, self.a, self.b, contains=True)):
             return [random.uniform(self.lower_bound, self.upper_bound) for _ in range(0, num_inner_points)]
         # Otherwise, select points within the overlapped range and return them
         else:
-            considered_range = get_overlapped_range_p_dist([self.lower_bound, self.upper_bound], [a, b])
+            considered_range = get_overlapped_range_p_dist([self.lower_bound, self.upper_bound], [self.a, self.b])
 
         r_lower, r_upper = considered_range
 
@@ -393,11 +394,11 @@ class pareto_distribution(common_continuous):
             return [random.uniform(self.lower_bound, self.upper_bound) for _ in range(0, num_inner_points)]
         # Otherwise, select points within the overlapped range and return them
         else:
-            considered_range = get_overlapped_range_p_dist([self.lower_bound, self.upper_bound], [x_m, np.inf])
+            considered_range = get_overlapped_range_p_dist([self.lower_bound, self.upper_bound], [self.x_m, np.inf])
 
         r_lower, r_upper = considered_range
 
-        return inner_points_within_range(pareto(α, scale=x_m), [self.lower_bound, self.upper_bound])
+        return inner_points_within_range(pareto(self.α, scale=self.x_m), [self.lower_bound, self.upper_bound])
 
 
 
