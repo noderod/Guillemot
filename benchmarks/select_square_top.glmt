@@ -1,0 +1,14 @@
+// SUMMARY
+//
+// Finds the probability of selecting a vertex at the top of the square disallowing the origin
+// Designed for visualization purposes
+
+x ∼ discrete_numeric(0=0.6, 1=0.4);
+y ∼ discrete_numeric(0=0.3, 1=0.7);
+
+// Disallows the origin
+reject ((x == 0) && (y == 0));
+
+show_circuit();
+
+return (y == 1);
