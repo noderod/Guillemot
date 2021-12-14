@@ -459,7 +459,7 @@ def get_PR_E_Var(ab, cdist):
 
     # Divides the result by the probability to make it accurate
     E   /= probability
-    Var /= probability
+    Var /= probability**2
 
     return [probability, E, Var]
 

@@ -6,11 +6,11 @@
 
 
 
-y1 ~ uniform(a=2, b=10, n=10);
-y2 ~ uniform(a=4, b=20, n=10);
+y1 ~ uniform(a=2, b=10, n=20);
+y2 ~ uniform(a=4, b=20, n=20);
 
 
-[b, m] = wls([1, 1, y1], [1, 2, y2]);
+[b, m] = wls([1, 1, y1], [1, 2,  y2]);
 
 
 print_combined(b);
