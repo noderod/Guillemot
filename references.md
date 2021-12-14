@@ -43,3 +43,6 @@
 40. [https://docs.python.org/3/library/random.html](https://docs.python.org/3/library/random.html)
 41. [https://en.wikipedia.org/wiki/Weighted_least_squares](https://en.wikipedia.org/wiki/Weighted_least_squares)
 42. Using *Kev* and *captainclam*'s answer from [https://stackoverflow.com/questions/14494747/how-to-add-images-to-readme-md-on-github](https://stackoverflow.com/questions/14494747/how-to-add-images-to-readme-md-on-github)
+43. [https://en.wikipedia.org/wiki/Generalized_least_squares](https://en.wikipedia.org/wiki/Generalized_least_squares)
+44. [https://en.wikipedia.org/wiki/Covariance_matrix](https://en.wikipedia.org/wiki/Covariance_matrix)
+45. Using *abeboparebop*'s answer from [https://stackoverflow.com/questions/44572109/what-are-the-arguments-for-scipy-stats-uniform](https://stackoverflow.com/questions/44572109/what-are-the-arguments-for-scipy-stats-uniform)

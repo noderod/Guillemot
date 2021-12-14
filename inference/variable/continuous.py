@@ -273,7 +273,9 @@ class uniform_distribution(common_continuous):
 
         # Distribution calculations completed using
         # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.uniform.html
-        probability, E, Var = get_PR_E_Var(ab=get_integral_points(lower_bound, upper_bound), cdist=uniform(loc = a, scale = b))
+        # Based on "abeboparebop"'s answer on
+        # https://stackoverflow.com/questions/44572109/what-are-the-arguments-for-scipy-stats-uniform
+        probability, E, Var = get_PR_E_Var(ab=get_integral_points(lower_bound, upper_bound), cdist=uniform(loc = a, scale = (b - a)))
 
         common_continuous.__init__(self, given_variable_name, "Uniform", ["a", "b"], [a, b],
             E, Var, lower_bound, upper_bound, probability)
@@ -450,7 +452,9 @@ def get_PR_E_Var(ab, cdist):
 
         # Integral always determined with Simpson's rule (1/3)
         E   += ((b - a)/6)*(E_f_a + 4*E_f_ab_2 + E_f_b)
-        Var += ((b - a)/6)*(V_f_a + 4*V_f_ab_2 + V_f_b) - E**2
+        Var += ((b - a)/6)*(V_f_a + 4*V_f_ab_2 + V_f_b)
+
+    Var -= E**2
 
 
     # Divides the result by the probability to make it accurate
