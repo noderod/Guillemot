@@ -546,7 +546,7 @@ class Circuit(object):
                 # [[Circuit node, assigned number]]
                 next_number = 0
                 maximum_possible_number = next_number
-                origin_node_pairs = [[ground_node, next_number]]
+                origin_node_pairs = [[ground_node, next_number, False]]
 
                 # Keeps track of seen nodes (relevant for marginalization and maximization nodes)
                 # {"Node ID":node number (int), ...}
@@ -566,13 +566,14 @@ class Circuit(object):
 
                     for an_original_node_pair in origin_node_pairs:
 
-                        [original_circuit_node, original_number] = an_original_node_pair
+                        [original_circuit_node, original_number, _deadend_node] = an_original_node_pair
 
                         # Obtains the node children
                         for a_next_node_pair in original_circuit_node.children:
 
                             next_circuit_node = a_next_node_pair
                             next_circuit_node_ID = next_circuit_node.node_ID
+                            nexi_circuit_node_deadend = next_circuit_node.deadend
 
                             # Obtains the next number
                             if next_circuit_node_ID in seen_nodes:
@@ -586,10 +587,10 @@ class Circuit(object):
                                 seen_nodes[next_circuit_node_ID] = next_number
 
                             # Adds the edge to the graph
-                            step_connections.append([original_number, next_number])
+                            step_connections.append([original_number, next_number, nexi_circuit_node_deadend])
 
                             # Adds the node as a next node to consider
-                            next_node_pairs.append([next_circuit_node, next_number])
+                            next_node_pairs.append([next_circuit_node, next_number, nexi_circuit_node_deadend])
 
                     # Replaces the old by the new
                     origin_node_pairs = next_node_pairs
@@ -633,7 +634,7 @@ class Circuit(object):
                     # Goes through every possible node
                     for nv in range(0, len(the_step_connections)):
 
-                        origin_node_ID, next_node_ID = the_step_connections[nv]
+                        origin_node_ID, next_node_ID, node_is_deadend = the_step_connections[nv]
 
                         # Gets the origin cordinates
                         xo, yo = node_locations[origin_node_ID]
@@ -658,7 +659,10 @@ class Circuit(object):
 
 
                         # Plots the new node
-                        plt.plot([xn], [yn], "bo")
+                        if node_is_deadend:
+                            plt.plot([xn], [yn], "ko")
+                        else:
+                            plt.plot([xn], [yn], "go")
 
                         # Plots the connection between both
                         plt.plot([xo, xn], [yo, yn], "k-")
