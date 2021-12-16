@@ -44,3 +44,5 @@
 41. [https://en.wikipedia.org/wiki/Weighted_least_squares](https://en.wikipedia.org/wiki/Weighted_least_squares)
 42. Using *Kev* and *captainclam*'s answer from [https://stackoverflow.com/questions/14494747/how-to-add-images-to-readme-md-on-github](https://stackoverflow.com/questions/14494747/how-to-add-images-to-readme-md-on-github)
 43. Using *abeboparebop*'s answer from [https://stackoverflow.com/questions/44572109/what-are-the-arguments-for-scipy-stats-uniform](https://stackoverflow.com/questions/44572109/what-are-the-arguments-for-scipy-stats-uniform)
+44. [https://www.overleaf.com/latex/templates/abstract-keywords-and-references/xsfshwnhyynd](https://www.overleaf.com/latex/templates/abstract-keywords-and-references/xsfshwnhyynd)
+45. [https://www.overleaf.com/learn/latex/Bibliography_management_with_bibtex#Bibliography:_just_a_list_of_.5Cbibitems](https://www.overleaf.com/learn/latex/Bibliography_management_with_bibtex#Bibliography:_just_a_list_of_.5Cbibitems)

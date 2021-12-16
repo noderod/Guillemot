@@ -1,6 +1,6 @@
 // SUMMARY
 //
-// Determines a weighted leeast quares regression over 2D points:
+// Determines a weighted least squares regression over 2D points:
 // y = b + m*x
 // This method is only interested in showing the coefficients, so the return probability is not shown
 
