@@ -7,7 +7,7 @@
 // N.B. Guillemot will only consider a 10σ wide interval (5σ from the mean in both directions)
 x ~ gaussian(μ=0.20, σ=0.01, n=1000); // (m)
 
-// Sping constant
+// Spring constant
 k = 200; // (Kg/(s**2))
 
 // Output forced exerted on the spring

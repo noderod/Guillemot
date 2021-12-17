@@ -46,3 +46,4 @@
 43. Using *abeboparebop*'s answer from [https://stackoverflow.com/questions/44572109/what-are-the-arguments-for-scipy-stats-uniform](https://stackoverflow.com/questions/44572109/what-are-the-arguments-for-scipy-stats-uniform)
 44. [https://www.overleaf.com/latex/templates/abstract-keywords-and-references/xsfshwnhyynd](https://www.overleaf.com/latex/templates/abstract-keywords-and-references/xsfshwnhyynd)
 45. [https://www.overleaf.com/learn/latex/Bibliography_management_with_bibtex#Bibliography:_just_a_list_of_.5Cbibitems](https://www.overleaf.com/learn/latex/Bibliography_management_with_bibtex#Bibliography:_just_a_list_of_.5Cbibitems)
+46. Using *Johannes_B* and *user2478*'s answer from [https://tex.stackexchange.com/questions/25665/undefined-control-sequence-includegraphics](https://tex.stackexchange.com/questions/25665/undefined-control-sequence-includegraphics)

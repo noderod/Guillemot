@@ -1,6 +1,8 @@
 // SUMMARY
 //
-// Predicts the probability of a ship crashing into an iceberg after 2 hours if maintaininbg its current course
+// Predicts the probability of a ship crashing
+//   into an iceberg after 2 hours if maintaininbg
+//   its current course
 // Not real data
 
 
@@ -29,12 +31,6 @@ marginalize(dx2, dy2);
 distance = ((dx2 + dy2)**0.5);
 marginalize(distance);
 
-// Crash if the distance between the iceberg and the ship is equal to or below 0.2 nautical miles
-if (distance <= 0.2) {
-    crash_with_iceberg = true;
-} else {
-    crash_with_iceberg = false;
-};
-
-
-return crash_with_iceberg;
+// Crash if the distance between the iceberg
+//   and the ship is equal to or below 0.2 nautical miles
+return (distance <= 0.2);

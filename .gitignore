@@ -1,4 +1,5 @@
 benchmarks/SimPPL
+benchmarks/paper
 presentation_graphics
 */__pycache__/
 */tmp*
