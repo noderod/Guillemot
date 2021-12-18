@@ -1,15 +1,14 @@
 // SUMMARY
 //
-// Solves the pidgeons and pidgeonholes problems covered
+// Solves the pigeons and pigeonholes problems covered
 //   by Steven Holtzen, Todd Millstein, Guy Van der Broeck
 //   in https://arxiv.org/abs/1903.04672 .
 
-// Keeps track of the number of pidgeons in each hole
+// Keeps track of the number of pigeons in each hole
 H1 = 0;
 H2 = 0;
 
-// Keeps track of the number of pidgeons
-// 1
+// 1 pigeon
 P ~ discrete_numeric(1=1, 2=1);
 if (P == 1) {
     H1 = (H1 + 1);
@@ -19,7 +18,7 @@ if (P == 1) {
 marginalize(H1, H2);
 
 
-// 2
+// 2 pigeons
 P ~ discrete_numeric(1=1, 2=1);
 if (P == 1) {
     H1 = (H1 + 1);

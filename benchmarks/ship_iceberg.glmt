@@ -15,15 +15,15 @@ t = 2;
 
 
 // Ship coordinates (nautical miles)
-ship_x_o ~ gaussian(μ=20, σ=0.1, n=9);
+ship_x_o ~ gaussian(μ=20, σ=0.1, n=6);
 ship_x = (ship_x_o + (t*v_x));
-ship_y_o ~ gaussian(μ=10, σ=0.1, n=9);
+ship_y_o ~ gaussian(μ=10, σ=0.1, n=6);
 ship_y = (ship_y_o + (t*v_y));
 
 // Iceberg coordinates (nautical miles)
-iceberg_x ~ gaussian(μ=40, σ=0.1, n=9);
+iceberg_x ~ gaussian(μ=40, σ=0.1, n=6);
 dx2 = ((iceberg_x - ship_x)**2);
-iceberg_y ~ gaussian(μ=20, σ=0.1, n=9);
+iceberg_y ~ gaussian(μ=20, σ=0.1, n=6);
 dy2 = ((iceberg_y - ship_y)**2);
 marginalize(dx2, dy2);
 
