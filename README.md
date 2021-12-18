@@ -85,6 +85,17 @@ These may be installed via (may require *sudo* access):
 pip3 install matplotlib numpy scipy
 ```
 
+Run Guillemot on a *.glmt* file (use the *-T* flag after the filename to show the time in miliseconds):
+```bash
+alias guillemot="python3 main.py"
+
+# Exact inference (direct search)
+guillemot enumerate benchmarks/truck_engine.glmt
+
+# Approximate inference (random sampling)
+guillemot rejection benchmarks/truck_engine.glmt
+```
+
 
 2. **Docker setup**
 
@@ -101,23 +112,8 @@ Enter the image (note, the container will be deleted after exiting), this step m
 docker run -it --rm guillemot/guillemot:latest bash
 ```
 
-Run a provided benchmark:
+Run a provided benchmark (use the *-T* flag after the filename to show the time in miliseconds):
 ```bash
-# Exact inference (direct search)
-guillemot enumerate benchmarks/truck_engine.glmt
-
-# Approximate inference (random sampling)
-guillemot rejection benchmarks/truck_engine.glmt
-```
-
-
-## Usage
-
-
-Run Guillemot on a *.glmt* file (use the *-T* flag after the filename to show the time in miliseconds):
-```bash
-alias guillemot="python3 main.py"
-
 # Exact inference (direct search)
 guillemot enumerate benchmarks/truck_engine.glmt
 
